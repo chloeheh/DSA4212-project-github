@@ -1,0 +1,18 @@
+\section{Baseline learning curves: dropout 0.1}
+\label{sec:baseline}
+Appendix Figure~\ref{fig:baseline} shows the 13 saved evaluations per architecture: initialization, approximately ten-minute intervals, and completion. Training losses here are also measured with dropout disabled on fixed sampled training windows; they are not noisy losses from a single optimization microbatch. The lower row omits initialization and uses a common scale to expose later changes.
+
+\begin{table}[H]
+\centering
+\caption{Baseline loss and best recorded time. All values are sampled cross-entropy in nats/token.}
+\begin{tabular}{lrrrr}
+\toprule Model & Best val. & Best time (min) & Final train & Final val.\\\midrule
+Small & \textbf{1.7652} & 110.1 & 1.5603 & 1.7659\\
+Medium & 1.8018 & 40.1 & 1.3299 & 1.8892\\
+Large & 1.8122 & 50.3 & 1.2865 & 1.9224\\\bottomrule
+\end{tabular}
+\end{table}
+
+All models improve rapidly before the first ten-minute measurement. Small continues improving gradually and largely plateaus late in the run. Medium and large reach their lowest validation losses much earlier; their training losses continue decreasing while validation deteriorates. Large obtains the lowest final training loss but the worst final validation loss. This separates fitting the observed training distribution from predictive performance on held-out pieces.
+
+Under the stated checkpoint rule, the baseline ranking is small, medium, then large. The gap is modest: medium and large best-checkpoint perplexities are about 3.7\% and 4.8\% higher than small's. The evidence does not imply that additional parameters are intrinsically harmful; it shows that additional capacity did not win under this implementation, dataset, schedule, and time constraint.

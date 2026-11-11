@@ -1,0 +1,96 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{libertine}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{amsmath,amssymb,graphicx,booktabs,array,tabularx}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{caption,float,enumitem,fancyhdr,microtype,xcolor}
+\usepackage{hyperref}
+\usepackage{xurl}
+\hypersetup{colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black}
+\urlstyle{same}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt plus 1pt minus 1pt}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\captionsetup{font=small,labelfont=bf,skip=5pt}
+\setlist{nosep,leftmargin=*}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small DSA4212: compute-budgeted music-event modeling}
+\fancyhead[R]{\small MAESTRO / nanoGPT}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{14pt}
+\newcommand{\code}[1]{\nolinkurl{#1}}
+\emergencystretch=1em
+\newcommand{\reportpage}{\clearpage}
+% Reporting objective: best validation-selected performance WITHIN two hours per run.
+% Primary evaluation: validation-selected small dropout 0.1, medium/large dropout 0.2.
+% The small entry replaces an earlier all-0.2 evaluation; history is disclosed in the report.
+\begin{document}
+
+% COVER: edit title, student details, and repository URL here.
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{1cm}
+\includegraphics[width=0.34\textwidth]{nus_logo.jpg}\par
+\vspace{1.5cm}
+{\Large DSA4212 Project Report\par}
+\vspace{0.7cm}
+{\huge\bfseries Best Performance Within a Fixed Compute Budget:\\[0.3cm]
+Model Size and Dropout in Piano Music-Event Transformers\par}
+\vspace{1cm}
+{\large MAESTRO v3.0.0 \quad$\vert$\quad Random initialization \quad$\vert$\quad NVIDIA A10\par}
+\vspace{1.2cm}
+\begin{tabular}{ll}
+\textbf{Name:} & Teo Chloe\\[0.3cm]
+\textbf{Student ID:} & A0286502E\\[0.3cm]
+\textbf{Email:} & \href{mailto:e1249216@u.nus.edu}{e1249216@u.nus.edu}\\[0.3cm]
+\textbf{Course:} & DSA4212\\[0.3cm]
+\textbf{Date:} & 8 November 2026
+\end{tabular}
+\vfill
+\textbf{Project repository}\\[0.2cm]
+\url{https://github.com/chloeheh/DSA4212-project}
+\vspace{0.8cm}
+\end{titlepage}
+
+% BODY: edit the corresponding .tex files under report/sections/.
+% Compile THIS main.tex to combine all sections, figures, and references.
+% Rebuild from the repository root with: bash report/build_report.sh
+\setcounter{page}{1}
+\hypersetup{pageanchor=true}
+\input{report/sections/01_data}
+\input{report/sections/02_question_models_metrics}
+\input{report/sections/03_implementation}
+\input{report/sections/04_compute_efficiency}
+\input{report/sections/05_baseline_results}
+\input{report/sections/06_baseline_analysis}
+\input{report/sections/07_regularization_design}
+\input{report/sections/08_regularization_results}
+\input{report/sections/09_final_evaluation}
+\input{report/sections/10_conclusions}
+\label{end:main}
+\clearpage
+\fancyhead[R]{\small References}
+\begingroup
+\small
+\setlength{\bibsep}{3pt}
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+\endgroup
+\clearpage
+\appendix
+\setcounter{page}{1}
+\renewcommand{\thepage}{A\arabic{page}}
+\setcounter{table}{0}
+\renewcommand{\thetable}{A\arabic{table}}
+\renewcommand{\theHtable}{appendix.\arabic{table}}
+\setcounter{figure}{0}
+\renewcommand{\theHfigure}{appendix.\arabic{figure}}
+\renewcommand{\thefigure}{A\arabic{figure}}
+\fancyhead[R]{\small Appendix}
+\input{report/appendix}
+\end{document}

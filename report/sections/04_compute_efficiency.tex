@@ -1,0 +1,42 @@
+\section{Optimizing throughput under the time budget}
+\label{sec:efficiency}
+\subsection*{Batch-size benchmarking without changing effective batch}
+Since we had limited GPU resources and training time, we wanted to make sure that our model could train as efficiently as possible. Before training, we tested different microbatch sizes of 4, 8, 16, and 32 on the NVIDIA A10 GPU to find which setting gave the fastest training speed.
+
+For each microbatch size, we measured the time taken for a complete training step, including data loading, transferring data to the GPU, forward and backward passes, gradient clipping, and the AdamW optimizer update. We first ran three warm-up steps, followed by six measured steps. We then used the median time to calculate the training throughput.
+
+We selected the microbatch size that achieved the highest throughput while using less than 85\% of the GPU memory. From our experiments, a microbatch size of 32 gave the best results across all the model architectures tested. Therefore, we used this setting for subsequent training. We also kept BF16 precision, fused optimization, and efficient batch loading to improve training efficiency.
+
+However, this benchmarking only compares the microbatch sizes we tested. It does not guarantee that microbatch size 32 is the best setting for every model or GPU. Additionally, the benchmark does not fully account for the extra time spent on validation and saving checkpoints during actual training.
+
+\begin{table}[H]
+\centering
+\caption{A10 batching measurements. Throughput is target tokens/s; memory is peak allocated GB, not total reserved/device usage.}
+\begin{tabular}{lrrrr}
+\toprule Model & Batch 4 & Batch 32 & Speedup & Batch-32 GB\\\midrule
+Small & 424,395 & 603,065 & $1.42\times$ & 2.24\\
+Medium & 151,006 & 182,301 & $1.21\times$ & 5.85\\
+Large & 57,946 & 68,590 & $1.18\times$ & 13.22\\\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{What the equal-time constraint actually equalizes}
+The same architecture-independent learning-rate schedule is indexed by elapsed fraction $u=t/7{,}200$. With warm-up fraction $w=0.02$, it increases toward $\eta_{\max}$ during approximately 144 seconds, then follows
+\begin{equation}
+\eta(u)=\eta_{\min}+\frac{\eta_{\max}-\eta_{\min}}{2}
+\left[1+\cos\!\left(\pi\frac{u-w}{1-w}\right)\right],\quad u\geq w.
+\end{equation}
+The code applies a small positive warm-up floor. Consequently, models have comparable learning rates at the same time, but not at the same update count. Validation and checkpoint time also advance this clock.
+
+\begin{table}[H]
+\centering
+\caption{Actual baseline training exposure within approximately 7,200 seconds. Equivalent passes are tokens seen divided by 33,293,600; sampling is with replacement, not ordered epochs.}
+\begin{tabular}{lrrr}
+\toprule Model & Updates & Targets seen (billions) & Equivalent passes\\\midrule
+Small & 127,396 & 4.175 & 125.4\\
+Medium & 40,719 & 1.334 & 40.1\\
+Large & 15,430 & 0.506 & 15.2\\\bottomrule
+\end{tabular}
+\end{table}
+
+Small processes about 8.3 times as many targets as large. Increasing capacity therefore trades off against repeated data exposure and the number of optimizer updates. Equal A10 time is appropriate for a rental-time question, but does not isolate parameter count, equalize arithmetic FLOPs, or establish sample efficiency. A stronger architecture-only comparison would add an equal-token study; it would answer a different question and cost additional compute. The shared LR and dropout settings also improve control without proving that each architecture has its optimal settings.

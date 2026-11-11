@@ -1,0 +1,35 @@
+{
+  "objective": "Best validation-selected performance obtained within a fixed two-hour A10 training budget per run, not performance restricted to the final training state.",
+  "models": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "checkpoint": "best.pt",
+  "selection_rule": "Within each size, choose the dropout setting with minimum recorded sampled validation cross-entropy, then evaluate its best.pt checkpoint. Choices are based on validation, not test loss.",
+  "scope": "Primary comparison uses the best validation-selected configurations among the two dropout settings tested. Dropout differs across sizes, so this is not a fixed-dropout architecture-only comparison.",
+  "splits": [
+    "validation",
+    "test"
+  ],
+  "evaluation": "Teacher-forced next-token cross-entropy; evaluate every token except the first token of each piece once. Consecutive non-overlapping target blocks of up to 1024 tokens reset context at block boundaries and never cross piece boundaries. Include EOS, exclude right-padding targets.",
+  "aggregation": "Token-weighted negative log likelihood in natural-log units (nats/token); perplexity is exp(cross_entropy). Per-piece and per-event-family diagnostics use the same scored targets.",
+  "inference": "model.eval(), inference_mode, BF16 autocast on A10; no training or optimizer updates.",
+  "interpretation": "Full-coverage validation loss is recomputed with the same protocol as test; it differs from the original sampled-window checkpoint-selection metric. Single-seed findings are descriptive, not significance tests.",
+  "revision": 2,
+  "sources": {
+    "small": {
+      "source_run": "maestro-20261104-optimized-v1",
+      "dropout": 0.1
+    },
+    "medium": {
+      "source_run": "maestro-dropout02-20261106-v1",
+      "dropout": 0.2
+    },
+    "large": {
+      "source_run": "maestro-dropout02-20261106-v1",
+      "dropout": 0.2
+    }
+  },
+  "evaluation_history": "The first evaluation used dropout 0.2 for all sizes. After its test results had been seen, the user requested replacing small with dropout 0.1, which had already been preferred by validation before test access. The original small result and protocol are archived; medium and large inference results are reused. This revised evaluation is not claimed to have been wholly preregistered before any test access."
+}

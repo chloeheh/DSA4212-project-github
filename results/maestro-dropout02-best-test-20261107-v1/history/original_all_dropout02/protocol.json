@@ -1,0 +1,21 @@
+{
+  "objective": "Best validation-selected performance obtained within a fixed two-hour A10 training budget per run, not performance restricted to the final training state.",
+  "source_run": "maestro-dropout02-20261106-v1",
+  "models": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "dropout": 0.2,
+  "checkpoint": "best.pt",
+  "selection_rule": "Minimum recorded sampled validation cross-entropy within each dropout 0.2 training run; no checkpoint selection using test results.",
+  "scope": "All three dropout 0.2 models requested by the user. This is not a claim that dropout 0.2 won across all configurations; small dropout 0.1 had slightly lower sampled validation loss.",
+  "splits": [
+    "validation",
+    "test"
+  ],
+  "evaluation": "Teacher-forced next-token cross-entropy; evaluate every token except the first token of each piece once. Consecutive non-overlapping target blocks of up to 1024 tokens reset context at block boundaries and never cross piece boundaries. Include EOS, exclude right-padding targets.",
+  "aggregation": "Token-weighted negative log likelihood in natural-log units (nats/token); perplexity is exp(cross_entropy). Per-piece and per-event-family diagnostics use the same scored targets.",
+  "inference": "model.eval(), inference_mode, BF16 autocast on A10; no training or optimizer updates.",
+  "interpretation": "Full-coverage validation loss is recomputed with the same protocol as test; it differs from the original sampled-window checkpoint-selection metric. Single-seed findings are descriptive, not significance tests."
+}

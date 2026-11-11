@@ -1,0 +1,31 @@
+\section{Research question, models, and evaluation criteria}
+\label{sec:question}
+\textbf{Objective.} Train a small autoregressive model from randomly initialized weights and investigate how to obtain the \emph{best performance within a fixed compute budget per training run}. Musical event sequences provide a structured discrete domain in which the language-model objective remains applicable. The study is not a pretrained-model fine-tuning exercise.
+
+\textbf{Hypotheses.} First, increased parameter count could improve prediction through greater representational capacity, but may lose its advantage when fewer updates fit into the same time budget. Second, if larger models fit training data increasingly well while validation loss rises, stronger dropout may improve their generalization. Neither hypothesis assumes that the largest model must win.
+
+\begin{table}[H]
+\centering
+\caption{Dense decoder-only GPT variants. Counts include learned position embeddings and count tied token/output weights once.}
+\begin{tabular}{lrrrr}
+\toprule Model & Layers & Heads & Width & Total parameters\\\midrule
+Small & 6 & 4 & 256 & 5,080,320\\
+Medium & 8 & 8 & 512 & 25,891,328\\
+Large & 12 & 12 & 768 & 86,029,056\\\bottomrule
+\end{tabular}
+\end{table}
+
+Each run uses one NVIDIA A10 on Modal, with 24\,GB device memory and BF16-capable Tensor Cores \citep{nvidiaa10}. Models run sequentially, rather than using a multi-GPU cluster. All have vocabulary size 376, context length 1,024, and an effective batch of 32 sequences. These are relative size labels for this study, not standard pretrained GPT-2 variants.
+
+\subsection*{Primary metric and checkpoint selection}
+For target events $y_i$ and the context $c_i$ available to the causal model, token-averaged negative log likelihood is
+\begin{equation}
+\mathcal L(\theta)=-\frac{1}{N}\sum_{i=1}^{N}\log p_\theta(y_i\mid c_i),
+\qquad \mathrm{PPL}=\exp\{\mathcal L(\theta)\}.
+\label{eq:nll}
+\end{equation}
+Natural logarithms give cross-entropy in nats per token; lower loss and perplexity are better. The metric rewards assigning probability to the actual next event, rather than only counting whether the top prediction is correct. It does not give partial credit for a musically nearby wrong pitch or establish perceptual quality.
+
+During training, each validation estimate averages 20 batches of four 1,024-token windows: 81,920 target positions. Seeds reset at each evaluation so models face the same windows. Windows can overlap, so these positions are not necessarily distinct. Dropout and gradient computation are disabled for evaluation.
+
+The primary checkpoint is \code{best.pt}, the lowest \emph{recorded validation} loss within the budget; \code{ckpt.pt} stores the latest state. Selection never uses test loss. The best checkpoint may precede two hours, while the run still receives the full opportunity to improve. This directly matches ``best within budget,'' rather than requiring the final weights to be optimal. Final losses remain useful diagnostics of overfitting. Full-coverage validation/test evaluation uses a separately specified, matched protocol in Section~\ref{sec:test}.

@@ -1,0 +1,35 @@
+{
+  "checkpoint": "/results/maestro-dropout02-20261106-v1/large/best.pt",
+  "checkpoint_sha256": "12c9943db48e2d82f5c1c0c67906f9751d6b176708ddcec138d42ef0099be465",
+  "model_args": {
+    "n_layer": 12,
+    "n_head": 12,
+    "n_embd": 768,
+    "block_size": 1024,
+    "vocab_size": 376,
+    "dropout": 0.2,
+    "bias": false
+  },
+  "selected_step": 7774,
+  "selected_elapsed_seconds": 3625.269998697002,
+  "selection_val_loss": 1.7968334913253785,
+  "tokens_seen_in_training": 254738432,
+  "splits": {
+    "validation": {
+      "cross_entropy": 1.7926495506893,
+      "perplexity": 6.005342866207813,
+      "scored_tokens": 3790050,
+      "pieces": 137,
+      "windows": 3765
+    },
+    "test": {
+      "cross_entropy": 1.7277289920830943,
+      "perplexity": 5.627858473512099,
+      "scored_tokens": 4334092,
+      "pieces": 177,
+      "windows": 4320
+    }
+  },
+  "gpu": "NVIDIA A10",
+  "evaluation_seconds": 41.396881887000006
+}

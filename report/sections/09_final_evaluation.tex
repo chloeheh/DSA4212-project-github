@@ -1,0 +1,23 @@
+\section{Final held-out evaluation and diagnostic evidence}
+\label{sec:test}
+The primary comparison uses the best validation-selected configuration among those tested for each size: \textbf{small dropout 0.1, medium dropout 0.2, and large dropout 0.2}, each using \code{best.pt}. Their checkpoint times are approximately 110.1, 60.1, and 60.4 minutes. This implements ``best within the budget,'' not a requirement to use the final two-hour weights. Because dropout differs, this evaluates each size with its selected regularization, rather than isolating architecture alone.
+
+\textbf{Evaluation sequence.} Initially all three dropout-0.2 checkpoints were tested. After inspecting those results, the small entry was replaced with dropout 0.1, which had already achieved lower validation loss before any test access. Only small inference was rerun; medium/large results were reused. The original small result and protocol are retained in an audit history, not treated as another training experiment. This revision is disclosed rather than described as an entirely untouched pre-test protocol. No new hyperparameters were chosen using the revised test result.
+
+\subsection*{Matched full-coverage scoring}
+Inference disables dropout and gradients. Every target after the first token of each piece is scored once, including EOS and partial tails, using consecutive blocks of at most 1,024 targets. Context resets at block boundaries and never crosses pieces. Padding is excluded and loss is token-weighted. This scores 3,790,050 validation and 4,334,092 test targets from 137 and 177 pieces. Validation is recomputed under the test procedure, rather than compared directly with the different random-window selection estimator.
+
+\begin{table}[H]
+\centering
+\caption{Revised primary comparison: validation-selected dropout and best checkpoint for each size.}
+\begin{tabular}{lrrrr}
+\toprule Model & Dropout & Full validation loss & Test loss & Test perplexity\\\midrule
+Small & 0.1 & \textbf{1.7581} & \textbf{1.6935} & \textbf{5.4385}\\
+Medium & 0.2 & 1.7848 & 1.7179 & 5.5730\\
+Large & 0.2 & 1.7926 & 1.7277 & 5.6279\\\bottomrule
+\end{tabular}
+\end{table}
+
+The lower test losses do not imply that evaluation improved the weights: the splits contain different pieces and may differ in difficulty. Among these selected configurations, medium and large test perplexities are approximately 2.5\% and 3.5\% above small's. Appendix Figures~\ref{fig:finalmetrics}--\ref{fig:pieceevaluation} present aggregate scores and per-piece distributions. These are descriptive single-seed findings, not proof of statistical reliability.
+
+Event-family results in Appendix Figure~\ref{fig:eventevaluation} and Table~\ref{tab:eventdiagnostics} expose differences hidden by a single average. Small is strongest on note-on prediction; larger models do not improve every category, although some timing and pedal losses are lower. Time shifts comprise 46.13\% of test targets, each note/velocity family 17.11\%, and EOS only 0.0041\%. The very high EOS losses therefore contribute little to the aggregate while flagging weak termination prediction. These measurements establish next-event predictive performance, not convincing long-form musical generation.

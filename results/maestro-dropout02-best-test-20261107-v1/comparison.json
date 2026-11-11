@@ -1,0 +1,47 @@
+[
+  {
+    "model": "small",
+    "dropout": 0.1,
+    "source_run": "maestro-20261104-optimized-v1",
+    "checkpoint": "best.pt",
+    "selected_step": 116873,
+    "selected_training_minutes": 110.09019741703332,
+    "selection_sampled_val_loss": 1.7652332186698914,
+    "full_validation_loss": 1.7581156927156576,
+    "validation_perplexity": 5.801495288662907,
+    "test_loss": 1.693503289089778,
+    "test_perplexity": 5.438500008364469,
+    "validation_scored_tokens": 3790050,
+    "test_scored_tokens": 4334092
+  },
+  {
+    "model": "medium",
+    "dropout": 0.2,
+    "source_run": "maestro-dropout02-20261106-v1",
+    "checkpoint": "best.pt",
+    "selected_step": 20323,
+    "selected_training_minutes": 60.13662281883332,
+    "selection_sampled_val_loss": 1.7872468948364257,
+    "full_validation_loss": 1.7848458509971477,
+    "validation_perplexity": 5.958661355078127,
+    "test_loss": 1.7179267292597984,
+    "test_perplexity": 5.572962218935345,
+    "validation_scored_tokens": 3790050,
+    "test_scored_tokens": 4334092
+  },
+  {
+    "model": "large",
+    "dropout": 0.2,
+    "source_run": "maestro-dropout02-20261106-v1",
+    "checkpoint": "best.pt",
+    "selected_step": 7774,
+    "selected_training_minutes": 60.421166644950034,
+    "selection_sampled_val_loss": 1.7968334913253785,
+    "full_validation_loss": 1.7926495506893,
+    "validation_perplexity": 6.005342866207813,
+    "test_loss": 1.7277289920830943,
+    "test_perplexity": 5.627858473512099,
+    "validation_scored_tokens": 3790050,
+    "test_scored_tokens": 4334092
+  }
+]

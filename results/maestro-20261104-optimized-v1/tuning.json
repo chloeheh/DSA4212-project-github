@@ -1,0 +1,123 @@
+{
+  "gpu": "NVIDIA A10G",
+  "effective_batch_size": 32,
+  "block_size": 1024,
+  "trials": {
+    "small": [
+      {
+        "batch_size": 4,
+        "gradient_accumulation_steps": 8,
+        "tokens_per_second": 424394.90505420277,
+        "peak_gpu_memory_gb": 0.379008512,
+        "safe_memory": true
+      },
+      {
+        "batch_size": 8,
+        "gradient_accumulation_steps": 4,
+        "tokens_per_second": 536348.9210966236,
+        "peak_gpu_memory_gb": 0.647280128,
+        "safe_memory": true
+      },
+      {
+        "batch_size": 16,
+        "gradient_accumulation_steps": 2,
+        "tokens_per_second": 571304.5848640035,
+        "peak_gpu_memory_gb": 1.181595136,
+        "safe_memory": true
+      },
+      {
+        "batch_size": 32,
+        "gradient_accumulation_steps": 1,
+        "tokens_per_second": 603065.2510325776,
+        "peak_gpu_memory_gb": 2.235867648,
+        "safe_memory": true
+      }
+    ],
+    "medium": [
+      {
+        "batch_size": 4,
+        "gradient_accumulation_steps": 8,
+        "tokens_per_second": 151006.45725417932,
+        "peak_gpu_memory_gb": 1.185746432,
+        "safe_memory": true
+      },
+      {
+        "batch_size": 8,
+        "gradient_accumulation_steps": 4,
+        "tokens_per_second": 165189.73726090454,
+        "peak_gpu_memory_gb": 1.86505984,
+        "safe_memory": true
+      },
+      {
+        "batch_size": 16,
+        "gradient_accumulation_steps": 2,
+        "tokens_per_second": 173655.2983187803,
+        "peak_gpu_memory_gb": 3.236531712,
+        "safe_memory": true
+      },
+      {
+        "batch_size": 32,
+        "gradient_accumulation_steps": 1,
+        "tokens_per_second": 182300.81255797262,
+        "peak_gpu_memory_gb": 5.85467648,
+        "safe_memory": true
+      }
+    ],
+    "large": [
+      {
+        "batch_size": 4,
+        "gradient_accumulation_steps": 8,
+        "tokens_per_second": 57946.06750758241,
+        "peak_gpu_memory_gb": 3.08552448,
+        "safe_memory": true
+      },
+      {
+        "batch_size": 8,
+        "gradient_accumulation_steps": 4,
+        "tokens_per_second": 62741.99385792457,
+        "peak_gpu_memory_gb": 4.611718656,
+        "safe_memory": true
+      },
+      {
+        "batch_size": 16,
+        "gradient_accumulation_steps": 2,
+        "tokens_per_second": 66499.83578540542,
+        "peak_gpu_memory_gb": 7.579516416,
+        "safe_memory": true
+      },
+      {
+        "batch_size": 32,
+        "gradient_accumulation_steps": 1,
+        "tokens_per_second": 68590.44342505521,
+        "peak_gpu_memory_gb": 13.221630464,
+        "safe_memory": true
+      }
+    ]
+  },
+  "selected": {
+    "small": {
+      "batch_size": 32,
+      "gradient_accumulation_steps": 1,
+      "tokens_per_second": 603065.2510325776,
+      "peak_gpu_memory_gb": 2.235867648,
+      "safe_memory": true,
+      "speedup_over_batch4": 1.4210002143064264
+    },
+    "medium": {
+      "batch_size": 32,
+      "gradient_accumulation_steps": 1,
+      "tokens_per_second": 182300.81255797262,
+      "peak_gpu_memory_gb": 5.85467648,
+      "safe_memory": true,
+      "speedup_over_batch4": 1.2072385239203218
+    },
+    "large": {
+      "batch_size": 32,
+      "gradient_accumulation_steps": 1,
+      "tokens_per_second": 68590.44342505521,
+      "peak_gpu_memory_gb": 13.221630464,
+      "safe_memory": true,
+      "speedup_over_batch4": 1.183694534854845
+    }
+  }
+}

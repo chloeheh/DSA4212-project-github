@@ -1,0 +1,31 @@
+\section{Follow-up experiment: stronger dropout}
+\label{sec:dropoutdesign}
+\subsection*{Rationale and mechanism}
+The baseline already includes dropout 0.1 and AdamW weight decay 0.1. The follow-up therefore tests \emph{stronger existing regularization}, not regularization versus none. Dropout disrupts co-adaptation by masking activations during training \citep{srivastava2014dropout}. For drop probability $p$, an inverted-dropout operation is
+\begin{equation}
+\widetilde h = \frac{m\odot h}{1-p},\qquad m_j\sim\mathrm{Bernoulli}(1-p).
+\end{equation}
+Retained values are rescaled during training; dropout is disabled during validation and test inference. In this implementation, the shared probability controls embedding, attention-probability, attention-output, and MLP-output dropout. Changing it therefore modifies several existing sites together, not just one hidden layer.
+
+Weight decay was a credible alternative: it shrinks parameters through AdamW's decoupled update \citep{loshchilov2019adamw}. But recorded losses do not show that insufficient weight shrinkage is the cause, and no weight-norm diagnostic was collected. Increasing dropout instead tests a complementary source of regularization while preserving optimizer settings. The choice is pragmatic under limited funding, not evidence that dropout must beat stronger weight decay. The value 0.2 is a moderate intervention, not a literature-established MAESTRO optimum.
+
+\subsection*{Design: isolate one setting across all sizes}
+All three architectures are retrained from random initialization with dropout increased from 0.1 to 0.2. Small is included even though its baseline plateau is less concerning: it is a useful check on whether an intervention benefits every capacity equally. This adds three two-hour runs, rather than assuming medium's behavior transfers to the others.
+
+\begin{table}[H]
+\centering
+\caption{Controls for the paired dropout comparison within each architecture.}
+\begin{tabularx}{\textwidth}{lX}
+\toprule Factor & Treatment or control\\\midrule
+Dropout & Only training hyperparameter changed: 0.1 $\rightarrow$ 0.2.\\
+Architecture / initialization & Same layers, heads, width, vocabulary, and seed 1337 per size.\\
+Optimizer / schedule & Same AdamW, decay 0.1, LR limits, clipping, and time schedule.\\
+Batching / context & Reuse batch 32, accumulation 1, and context 1,024.\\
+Evaluation / budget & Same fixed windows, frequency, checkpoint rule, and 7,200-second limit.\\\bottomrule
+\end{tabularx}
+\end{table}
+
+Frozen configurations and a dedicated launcher are stored in \code{modified-nanoGPT/experiments/regularization/}. The launcher checks each candidate against its saved baseline and rejects accidental changes beyond dropout and output destination. The prior batching result is reused, avoiding another paid sweep. Outputs remain separate from the baselines; interrupted jobs resume their original budgets.
+
+\subsection*{Predefined improvement criterion}
+The primary question is whether dropout 0.2 achieves a lower \emph{best validation cross-entropy} than dropout 0.1 for the same size. A smaller training--validation gap alone is not sufficient: stronger regularization can worsen both losses through underfitting. Final losses, time of the minimum, and processed tokens provide secondary diagnostics. The same seed controls initialization but does not remove stochasticity or guarantee identical masks and trajectories. This is a one-seed ablation, not a broad hyperparameter search.

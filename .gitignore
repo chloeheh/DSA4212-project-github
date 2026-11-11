@@ -1,0 +1,27 @@
+
+# MAESTRO dataset
+/data/maestro/
+/maestro-data/
+
+# Python temporary files
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Model checkpoints
+*.pt
+*.pth
+*.ckpt
+
+# macOS
+.DS_Store
+
+# LaTeX generated files
+/report/build/
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.synctex.gz

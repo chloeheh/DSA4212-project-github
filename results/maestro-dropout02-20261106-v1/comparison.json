@@ -1,0 +1,32 @@
+[
+  {
+    "model": "small",
+    "baseline_best_val_loss": 1.7652332186698914,
+    "dropout02_best_val_loss": 1.7665206909179687,
+    "best_val_loss_change": 0.0012874722480773482,
+    "baseline_final_val_loss": 1.765851652622223,
+    "dropout02_final_val_loss": 1.7665206909179687,
+    "tokens_seen": 4139122688,
+    "training_loop_seconds": 7200.016682967
+  },
+  {
+    "model": "medium",
+    "baseline_best_val_loss": 1.8018089950084686,
+    "dropout02_best_val_loss": 1.7872468948364257,
+    "best_val_loss_change": -0.014562100172042847,
+    "baseline_final_val_loss": 1.8891720294952392,
+    "dropout02_final_val_loss": 1.8051241040229797,
+    "tokens_seen": 1329266688,
+    "training_loop_seconds": 7200.116708633001
+  },
+  {
+    "model": "large",
+    "baseline_best_val_loss": 1.812227827310562,
+    "dropout02_best_val_loss": 1.7968334913253785,
+    "best_val_loss_change": -0.015394335985183583,
+    "baseline_final_val_loss": 1.9224377393722534,
+    "dropout02_final_val_loss": 1.8305073618888854,
+    "tokens_seen": 506560512,
+    "training_loop_seconds": 7200.404209609
+  }
+]

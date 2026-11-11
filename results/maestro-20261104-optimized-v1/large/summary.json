@@ -1,0 +1,23 @@
+{
+  "parameters": 86029056,
+  "iterations": 15430,
+  "tokens_seen": 505610240,
+  "budget_seconds": 7200.0,
+  "training_loop_seconds": 7200.125474718001,
+  "total_elapsed_seconds": 7201.858860359998,
+  "best_val_loss": 1.812227827310562,
+  "final_train_loss": 1.2864604115486145,
+  "final_val_loss": 1.9224377393722534,
+  "final_val_perplexity": 6.837606471809119,
+  "peak_gpu_memory_gb": 13.218157056,
+  "gpu": "NVIDIA A10",
+  "model_args": {
+    "n_layer": 12,
+    "n_head": 12,
+    "n_embd": 768,
+    "block_size": 1024,
+    "vocab_size": 376,
+    "dropout": 0.1,
+    "bias": false
+  }
+}
