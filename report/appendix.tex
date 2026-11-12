@@ -1,56 +1,24 @@
-\section{Supplementary figures and diagnostics}
+\section{Learning curves and detailed test results}
 \label{app:figures}
-\subsection{Baseline training trajectories}
-The following enlarged figures support Sections~\ref{sec:baseline}--\ref{sec:baselineanalysis}. Points are actual recorded evaluations, not additional observations along the connecting lines.
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{plots/maestro-20261104-optimized-v1/learning_curves.pdf}
-\caption{Baseline trajectories. Dashed grey: sampled training loss; colored solid: sampled validation loss. Stars mark the lowest recorded validation checkpoint. Connecting lines do not add measurements between checkpoints.}
+\includegraphics[width=\textwidth]{baseline_curves.pdf}
+\caption{Baseline learning curves. Dashed grey: sampled training loss; solid colors: sampled validation loss. Stars mark best recorded validation checkpoints. The bottom row omits initialization. Lines connect recorded checks; they do not add observations.}
 \label{fig:baseline}
 \end{figure}
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.86\textwidth]{plots/maestro-20261104-optimized-v1/validation_comparison.pdf}
-\caption{Validation comparison after initialization under equal A10 time. Small's slower, sustained improvement contrasts with the earlier minima and subsequent increases of medium and large.}
-\label{fig:baselineval}
-\end{figure}
-\clearpage
-\subsection{Dropout intervention}
-These figures support Section~\ref{sec:dropoutresults}. Every size receives the same nominal training-loop budget; the treatment changes dropout from 0.1 to 0.2.
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{plots/maestro-dropout02-20261106-v1/learning_curves.pdf}
-\caption{Full dropout-0.2 trajectories (top) and post-initialization zoom (bottom). Dashed grey is training loss; colored solid is validation loss.}
-\label{fig:dropoutfull}
-\end{figure}
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{plots/maestro-dropout02-20261106-v1/dropout_baseline_comparison.pdf}
-\caption{Validation loss with dropout 0.1 (grey dashed) and 0.2 (colored solid). Each architecture is compared with its own baseline. Stars denote recorded minima; initialization is omitted.}
+\includegraphics[width=\textwidth]{dropout_comparison.pdf}
+\caption{Follow-up prompted by the baseline curves: dropout 0.1 (grey dashed) versus 0.2 (colored solid). Each size is compared with its own baseline; stars mark its best recorded validation losses. Medium and large improve, while small does not.}
 \label{fig:dropout}
 \end{figure}
 \clearpage
-\subsection{Final evaluation of validation-selected configurations}
-The figures on this page use small dropout 0.1 and medium/large dropout 0.2, all using validation-selected best checkpoints. They supersede the original all-dropout-0.2 final-comparison figures. The evaluation sequence is disclosed in Section~\ref{sec:test}.
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{plots/maestro-dropout02-best-test-20261107-v1/validation_test_metrics.pdf}
-\caption{Full-coverage validation and test metrics for the revised primary comparison. The split scores use identical windowing but different pieces.}
-\label{fig:finalmetrics}
-\end{figure}
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.78\textwidth]{plots/maestro-dropout02-best-test-20261107-v1/test_piece_distribution.pdf}
-\caption{Per-piece test-loss distributions. The same 177 pieces appear for each model. These distributions weight pieces equally, while aggregate metrics weight tokens equally.}
+\includegraphics[width=0.70\textwidth]{test_piece_distribution.pdf}
+\caption{Test-loss distributions for the selected settings: small dropout 0.1, medium/large dropout 0.2. Each model is scored on the same 177 pieces. These distributions give each piece equal weight, while the overall loss gives each token equal weight. They do not measure variation across training seeds.}
 \label{fig:pieceevaluation}
 \end{figure}
-\clearpage
-\subsection{Event-family diagnostic losses}
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{plots/maestro-dropout02-best-test-20261107-v1/test_event_family_losses.pdf}
-\caption{Mean test cross-entropy grouped by true target event family for the revised primary comparison. EOS has high loss but only 177 targets; this chart does not imply that all families contribute equally to aggregate loss.}
-\label{fig:eventevaluation}
-\end{figure}
-\input{report/generated_event_table}
-The event counts are identical across models. Conditional category averages diagnose different prediction problems; they are not separate classification tasks. In particular, a very large EOS perplexity describes poor termination prediction under the scoring protocol, rather than the overall model perplexity. No audio or listening evaluation was performed.
+\input{tables/paired_test_summary}
+\input{tables/event_family_losses}
+The event counts are identical across models. Each category's loss still uses probabilities over the full vocabulary. EOS has high loss but only 177 targets, so poor prediction of endings has little effect on overall loss. These diagnostics do not measure audio or listening quality. Additional figures and analysis notebooks remain available in the repository.

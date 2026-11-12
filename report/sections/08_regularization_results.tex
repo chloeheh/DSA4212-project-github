@@ -1,6 +1,6 @@
-\section{Regularization findings and their interpretation}
+\section{Results with stronger dropout}
 \label{sec:dropoutresults}
-Appendix Figure~\ref{fig:dropout} overlays each architecture's two dropout trajectories; full follow-up curves appear in Figure~\ref{fig:dropoutfull}.
+Appendix Figure~\ref{fig:dropout} compares validation loss with dropout 0.1 and 0.2 for each model. The full follow-up curves are also available in the repository’s regularization analysis notebook.
 
 \begin{table}[H]
 \centering
@@ -14,12 +14,17 @@ Large & 1.8122 & \textbf{1.7968} & $-0.0154$ & 1.9224 & 1.8305\\\bottomrule
 \end{tabular}
 \end{table}
 
-\subsection*{A capacity-dependent benefit}
-Medium and large improve their best validation perplexities by approximately 1.45\% and 1.53\%. Their recorded minima shift from 40.1 to 60.1 minutes and from 50.3 to 60.4 minutes, respectively. Their final loss improvements, 0.0840 and 0.0919 nats/token, are larger than the improvements in minima. Thus dropout chiefly suppresses late deterioration while also giving a modest improvement to the primary selection metric.
+\subsection*{How the benefit differs by model size}
+With stronger dropout, medium and large reduce their best validation perplexities by about 1.45\% and 1.53\%. Medium reaches its best recorded result at 60.1 minutes instead of 40.1, while large reaches it at 60.4 minutes instead of 50.3. Their final validation losses improve by 0.0840 and 0.0919 nats/token. These improvements are larger than the changes in their best losses. Stronger dropout therefore mainly reduces the worsening seen late in training, while also slightly improving the best checkpoints.
 
-The final training--validation gaps shrink from 0.5593 to 0.3841 for medium and from 0.6360 to 0.4572 for large. The gaps remain positive and validation still rises after the minima: overfitting is reduced, not eliminated. Because evaluation occurs about every ten minutes, the true optimal stopping times are not precisely identified.
+The final gaps between training and validation loss fall from 0.5593 to 0.3841 for medium and from 0.6360 to 0.4572 for large. Validation loss still rises after its minimum, so dropout reduces overfitting without removing it. Since we evaluate about every ten minutes, we cannot identify the exact best stopping time.
 
-Small's best loss changes by only $+0.0013$, corresponding to about 0.13\% higher perplexity. Its final gap shrinks from 0.2055 to 0.1444, yet validation does not improve. This is a concrete counterexample to treating gap reduction as success. Stronger dropout initially slows all models, but appears better matched to the larger models' generalization problem. This is an interpretation of the curves, not a proven causal account of internal features.
+Small's best loss increases by just $0.0013$, or about 0.13\% in perplexity. Its final training--validation gap falls from 0.2055 to 0.1444, but validation performance does not improve. This shows why a smaller gap alone does not mean a better model. The recorded early validation curves are worse with stronger dropout for all three sizes, but it appears more useful later for the larger models. The curves support this interpretation, but do not prove which internal features caused the result.
 
-\subsection*{Fairness and the scope of the finding}
-Follow-up token counts are 4.139B, 1.329B, and 0.507B, close to their baseline counterparts. Gross throughput changes therefore do not explain away the observed pattern, although equal time never guarantees equal training exposure. Small remains the lowest-loss architecture among both dropout settings on sampled validation. The evidence supports a size-dependent regularization effect in these runs, not that dropout 0.2 is universally optimal or superior to weight-decay tuning. Across both experiments, six runs consume approximately 12 training-loop GPU-hours, excluding benchmarking, startup, and final evaluation.
+\subsection*{What remains unanswered before testing}
+Stronger dropout helps medium and large, but neither overtakes small. This suggests that overfitting explains part of their later worsening, while stronger regularization alone does not resolve the size ranking. Small is an unsuccessful intervention: its smaller gap does not produce better validation predictions. Its $0.0013$ loss difference is too small to interpret confidently without repeated seeds. We should not describe dropout 0.2 as harmful in general.
+
+The next questions are whether these small improvements repeat across seeds, whether another dropout or weight-decay value helps more, and whether the ranking changes with a different learning rate or equal-token budget. These remain open because those experiments were not run. Testing now addresses a narrower question: how do the validation-selected settings predict unseen pieces under one common scoring method?
+
+\subsection*{How comparable the runs are}
+The follow-up runs process 4.139B, 1.329B, and 0.507B tokens, close to the baseline counts. A large change in training speed is therefore unlikely to explain the pattern, although equal time does not guarantee equal amounts of training. Small still has the lowest sampled validation loss across both dropout settings. These runs suggest that the benefit of dropout depends on model size; they do not show that 0.2 is always best or better than tuning weight decay. The six training runs use about 12 GPU-hours of loop time, excluding benchmarking, setup, and final evaluation.

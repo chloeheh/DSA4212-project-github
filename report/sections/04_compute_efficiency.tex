@@ -1,13 +1,13 @@
-\section{Optimizing throughput under the time budget}
+\section{Training faster within the time budget}
 \label{sec:efficiency}
-\subsection*{Batch-size benchmarking without changing effective batch}
-Since we had limited GPU resources and training time, we wanted to make sure that our model could train as efficiently as possible. Before training, we tested different microbatch sizes of 4, 8, 16, and 32 on the NVIDIA A10 GPU to find which setting gave the fastest training speed.
+\subsection*{Testing batch sizes while keeping 32 sequences per update}
+A microbatch is the set of sequences processed in one forward/backward pass. We benchmark sizes 4, 8, 16, and 32 on the A10, accumulating gradients as needed to keep 32 sequences per optimizer update. Throughput measures target tokens processed per second.
 
-For each microbatch size, we measured the time taken for a complete training step, including data loading, transferring data to the GPU, forward and backward passes, gradient clipping, and the AdamW optimizer update. We first ran three warm-up steps, followed by six measured steps. We then used the median time to calculate the training throughput.
+We time complete updates, including loading, transfer, forward/backward passes, clipping, and AdamW. After three warm-up steps, six measured steps give the median update time.
 
-We selected the microbatch size that achieved the highest throughput while using less than 85\% of the GPU memory. From our experiments, a microbatch size of 32 gave the best results across all the model architectures tested. Therefore, we used this setting for subsequent training. We also kept BF16 precision, fused optimization, and efficient batch loading to improve training efficiency.
+We choose the highest measured throughput below 85\% GPU memory use. Microbatch 32 wins for all three sizes and is used in training, with BF16 and fused optimization.
 
-However, this benchmarking only compares the microbatch sizes we tested. It does not guarantee that microbatch size 32 is the best setting for every model or GPU. Additionally, the benchmark does not fully account for the extra time spent on validation and saving checkpoints during actual training.
+This compares only the tested batch sizes. It does not establish a global optimum and excludes periodic validation/checkpoint overhead.
 
 \begin{table}[H]
 \centering
@@ -20,13 +20,13 @@ Large & 57,946 & 68,590 & $1.18\times$ & 13.22\\\bottomrule
 \end{tabular}
 \end{table}
 
-\subsection*{What the equal-time constraint actually equalizes}
-The same architecture-independent learning-rate schedule is indexed by elapsed fraction $u=t/7{,}200$. With warm-up fraction $w=0.02$, it increases toward $\eta_{\max}$ during approximately 144 seconds, then follows
+\subsection*{What the same time budget means}
+All models use the same learning-rate schedule based on elapsed time. Let $u=t/7{,}200$ be the fraction of the budget used. For the first $w=0.02$ of the budget (about 144 seconds), the learning rate rises towards $\eta_{\max}$. After this warm-up, it follows
 \begin{equation}
 \eta(u)=\eta_{\min}+\frac{\eta_{\max}-\eta_{\min}}{2}
 \left[1+\cos\!\left(\pi\frac{u-w}{1-w}\right)\right],\quad u\geq w.
 \end{equation}
-The code applies a small positive warm-up floor. Consequently, models have comparable learning rates at the same time, but not at the same update count. Validation and checkpoint time also advance this clock.
+The code keeps the learning rate slightly above zero during warm-up. Models therefore have similar learning rates at the same elapsed time, even though they have completed different numbers of updates. Time spent on validation and checkpoint saving also counts towards the schedule.
 
 \begin{table}[H]
 \centering
@@ -39,4 +39,4 @@ Large & 15,430 & 0.506 & 15.2\\\bottomrule
 \end{tabular}
 \end{table}
 
-Small processes about 8.3 times as many targets as large. Increasing capacity therefore trades off against repeated data exposure and the number of optimizer updates. Equal A10 time is appropriate for a rental-time question, but does not isolate parameter count, equalize arithmetic FLOPs, or establish sample efficiency. A stronger architecture-only comparison would add an equal-token study; it would answer a different question and cost additional compute. The shared LR and dropout settings also improve control without proving that each architecture has its optimal settings.
+Small processes about 8.3 times as many targets as large. Larger capacity therefore comes with fewer updates and less data exposure. Equal A10 time answers a rental-budget question, but does not isolate model size, equalize FLOPs, or measure equal-token efficiency. Shared learning rate and dropout improve control, without establishing the best settings for every size.

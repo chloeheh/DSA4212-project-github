@@ -1,37 +1,7 @@
-\section{Dataset and music-event tokenization}
+\section{Data and prediction task}
 \label{sec:data}
-MAESTRO pairs expressive piano MIDI with aligned audio; the released data are organized by performance and accompanied by composer, title, year, and split metadata \citep{hawthorne2019maestro}. This project uses the \emph{MIDI-only v3.0.0} data, not audio waveforms. Its 1,276 performances provide note timing, pitch, velocity, and pedal information without requiring an audio encoder. The supplied split assignments are preserved; the dataset documentation describes composition-disjoint subsets \citep{maestrodata}. This reduces overlap of the same composition across splits, although it is not a new leakage audit performed by this project.
+We use the MIDI-only MAESTRO v3.0.0 piano performances \citep{hawthorne2019maestro}. The supplied training/validation/test splits contain 962/137/177 pieces and 33,293,600/3,790,187/4,334,269 event tokens. The documentation keeps performances of the same composition in one split \citep{maestrodata}; we preserve this split but do not independently audit every possible overlap.
 
-\begin{table}[H]
-\centering
-\caption{Dataset sizes after this project's tokenizer; counts are read from \code{data/maestro/summary.json}.}
-\begin{tabular}{lrr}
-\toprule Split & Pieces & Event tokens\\\midrule
-Training & 962 & 33,293,600\\
-Validation & 137 & 3,790,187\\
-Test & 177 & 4,334,269\\\bottomrule
-\end{tabular}
-\end{table}
+The tokenizer converts music into 376 instructions: 128 note starts, 128 note endings, 100 time shifts, 16 velocity bins, two pedal states, and BOS/EOS boundaries. Timing is rounded to 10\,ms; longer pauses use multiple shifts of at most one second. At equal timestamps, note endings precede pedal changes and note starts. A velocity token precedes every note start. Only pedal state changes are emitted. This preserves expressive event order while discarding some timing/velocity detail and other MIDI metadata. A token is not a note, and 1,024 tokens cover different musical durations in busy and quiet passages.
 
-\subsection*{Representing music as a discrete sequence}
-The notebook \code{tokenization.ipynb} converts each MIDI performance into integer event IDs. This makes autoregressive music modeling compatible with the categorical next-token objective used in language modeling. A token is an instruction, not necessarily a note: one note involves velocity, note-on, elapsed-time, and note-off events. The vocabulary contains 376 tokens:
-
-\begin{table}[H]
-\centering
-\begin{tabularx}{\textwidth}{lrX}
-\toprule Family & Count & Meaning\\\midrule
-\code{NOTE_ON} & 128 & Start MIDI pitch 0--127.\\
-\code{NOTE_OFF} & 128 & End MIDI pitch 0--127.\\
-\code{TIME_SHIFT} & 100 & Advance 1--100 ticks; each tick is 10\,ms.\\
-\code{VELOCITY} & 16 & Set the velocity bin for subsequent note-ons.\\
-\code{PEDAL_ON/OFF} & 2 & Change sustain state, from controller CC64.\\
-\code{BOS/EOS} & 2 & Mark the beginning/end of a piece.\\\bottomrule
-\end{tabularx}
-\end{table}
-
-Long pauses are decomposed into shifts of at most one second. Notes are quantized in absolute elapsed seconds; simultaneous events are ordered as note-offs, pedal changes, then note-ons. The encoder emits a velocity token before every note-on. Pedal messages are emitted only when the sustain state changes. Each piece starts with BOS and ends with EOS.
-
-\subsection*{Storage, checks, and information loss}
-The notebook writes \code{train.bin}, \code{val.bin}, and \code{test.bin} as \code{uint16} IDs. \code{meta.pkl} stores the vocabulary and mappings; \code{piece_offsets.json} stores each piece's starting offset and length. Assertions verify file lengths, token ranges, and boundary markers. An example is decoded into \code{roundtrip_example.mid} for inspection; it is not a generated-model sample.
-
-The representation is deliberately lossy: timing is rounded to 10\,ms, velocities are binned, and original tempo/program metadata and controllers other than CC64 are omitted. Consequently, results concern prediction of this event representation, not faithful waveform reconstruction. Event counts are not durations: a 1,024-token context spans different amounts of musical time depending on event density.
+The notebook checks token ranges, lengths, and piece boundaries and decodes one source piece to inspect the tokenizer. This is not a generated sample. Storage details and preparation steps are in the reproduction guide; our results concern event prediction, not audio reconstruction.

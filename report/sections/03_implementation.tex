@@ -1,14 +1,12 @@
 \section{Adapting nanoGPT to MAESTRO}
 \label{sec:implementation}
-\subsection*{Why nanoGPT is an appropriate base}
-The implementation starts from nanoGPT's compact PyTorch GPT code \citep{karpathynanogpt}. Its explicit model definition and training loop make architecture, data handling, optimizer behavior, and checkpointing inspectable. This is useful for a controlled educational experiment: changing width, depth, and dropout does not require replacing the whole framework. The choice is one of transparency and reuse, not evidence that nanoGPT is the fastest possible music-model implementation.
+nanoGPT provides compact PyTorch model and training code \citep{karpathynanogpt}. It lets us inspect data loading, optimization, and checkpointing and vary model size without changing frameworks. We choose it for clarity and reuse, without claiming it is the fastest implementation.
 
-The retained decoder uses learned token and absolute position embeddings, pre-normalized causal self-attention, residual connections, and a GELU MLP expanding width by a factor of four. Token embeddings and the output head share weights. Causal masking prevents positions from reading their next-token targets; self-attention supplies the sequence modeling mechanism \citep{vaswani2017attention}. Models are initialized randomly; inherited text-GPT loading methods are not called.
+The decoder learns token and absolute position embeddings. Causal attention uses earlier tokens while masking future targets \citep{vaswani2017attention}. Blocks use pre-layer normalization, residual connections, and GELU feed-forward networks with four times the hidden width. Token embeddings and the output head share weights. All models start from random weights.
 
-\subsection*{Changes needed for this dataset}
-\code{MaestroData} memory-maps the token binaries and reads piece boundaries. It samples uniformly across admissible within-piece window starts. A piece of length $L$ contributes $L-1{,}024$ starts when $L>1{,}024$; longer pieces therefore receive proportionally more sampling opportunities. Inputs contain tokens $t_0,\ldots,t_{1023}$ and targets contain $t_1,\ldots,t_{1024}$. Neither crosses a piece boundary. Shorter pieces cannot supply full training windows.
+The loader memory-maps token files and samples uniformly over valid within-piece window starts. A piece with $L>1{,}024$ tokens provides $L-1{,}024$ starts, so longer pieces receive more sampling opportunities. Inputs are $t_0,\ldots,t_{1023}$ and targets are $t_1,\ldots,t_{1024}$. Neither crosses piece boundaries; shorter pieces cannot supply full training windows.
 
-The loader validates offsets, binary lengths, and vocabulary ranges, then gathers each 1,025-token window once to form contiguous input/target arrays. Training reads the true vocabulary size from metadata: \code{GPTConfig}'s inherited 50,304-token default is explicitly overridden by 376. Separate configuration files specify the three architectures. \code{configurator.py} applies these settings and command-line overrides before model construction.
+The loader validates offsets, lengths, and token IDs and overrides the inherited vocabulary default with 376. Architecture configurations and environment details are recorded in the repository.
 
 \begin{table}[H]
 \centering
@@ -22,7 +20,6 @@ Context & 1,024 tokens & Targets/update & 32,768\\\bottomrule
 \end{tabular}
 \end{table}
 
-AdamW uses adaptive gradient moments with decoupled weight decay \citep{loshchilov2019adamw}; matrix weights receive decay, while one-dimensional normalization parameters do not. Gradients are cleared with \code{set_to_none=True}; fused AdamW is enabled on CUDA. PyTorch scaled dot-product attention is used when available. \code{torch.compile} remains disabled; compiler modes were not benchmarked.
+AdamW adapts updates using past gradients and separately applies weight decay \citep{loshchilov2019adamw}. Matrix weights receive decay; one-dimensional normalization parameters do not. CUDA uses fused AdamW and, when available, PyTorch scaled dot-product attention. Compilation is disabled and compiler modes were not benchmarked.
 
-\subsection*{Budget enforcement and reproducibility}
-Each run receives 7,200 seconds of training-loop time, including initial/periodic validation and checkpoint writes. Initialization and final evaluation/save add overhead, and the current optimizer step is completed at the boundary. Thus this is an approximately two-hour loop budget, not an exact two-hour invoice or fixed-FLOP allocation. Atomic checkpoint writes retain weights, optimizer/scaler states, random states, elapsed budget, and token counts; resuming preserves the original budget. Modal Volumes persist outputs independently of the local client. The image pins Python 3.11, PyTorch 2.6.0, and NumPy 2.2.3.
+The 7,200-second loop budget includes validation and checkpoint writes. Setup and final evaluation/saving add overhead, and an ongoing update finishes at the boundary. This is approximately two hours of loop time, not exactly billed time or fixed FLOPs. Atomic checkpoints save weights, optimizer/scaler, random states, token counts, and elapsed budget. Resuming keeps the original budget; Modal Volumes persist outputs after client disconnection. The image pins Python 3.11, PyTorch 2.6.0, and NumPy 2.2.3.

@@ -1,8 +1,8 @@
 \section{Research question, models, and evaluation criteria}
 \label{sec:question}
-\textbf{Objective.} Train a small autoregressive model from randomly initialized weights and investigate how to obtain the \emph{best performance within a fixed compute budget per training run}. Musical event sequences provide a structured discrete domain in which the language-model objective remains applicable. The study is not a pretrained-model fine-tuning exercise.
+\textbf{Objective.} Starting with random weights, train a model to predict the next music event and find the \emph{best performance within a fixed training-time budget per run}. This is a controlled study of model size, rather than an attempt to build a production music generator. The Smol Training Playbook recommends defining the purpose before choosing a model \citep{smolplaybook}; we use this practitioner guide for framing, not as peer-reviewed evidence for performance.
 
-\textbf{Hypotheses.} First, increased parameter count could improve prediction through greater representational capacity, but may lose its advantage when fewer updates fit into the same time budget. Second, if larger models fit training data increasingly well while validation loss rises, stronger dropout may improve their generalization. Neither hypothesis assumes that the largest model must win.
+\textbf{Initial hypothesis.} A larger model will achieve lower validation loss because it can learn more complex musical patterns. We test this under the same two-hour GPU-time budget for each size. This is a hypothesis to check, rather than an expected result we must obtain. The initial comparison concerns model size; the follow-up question is developed from the baseline observations in Sections~\ref{sec:baselineanalysis}--\ref{sec:dropoutdesign}.
 
 \begin{table}[H]
 \centering
@@ -15,17 +15,17 @@ Large & 12 & 12 & 768 & 86,029,056\\\bottomrule
 \end{tabular}
 \end{table}
 
-Each run uses one NVIDIA A10 on Modal, with 24\,GB device memory and BF16-capable Tensor Cores \citep{nvidiaa10}. Models run sequentially, rather than using a multi-GPU cluster. All have vocabulary size 376, context length 1,024, and an effective batch of 32 sequences. These are relative size labels for this study, not standard pretrained GPT-2 variants.
+Each run uses one Modal NVIDIA A10 GPU with 24\,GB memory and BF16 support \citep{nvidiaa10}; models run sequentially. All use vocabulary 376, context 1,024, and effective batch 32. Small/medium/large are project-specific labels, not pretrained GPT-2 variants.
 
 \subsection*{Primary metric and checkpoint selection}
-For target events $y_i$ and the context $c_i$ available to the causal model, token-averaged negative log likelihood is
+For target event $y_i$ and its earlier context $c_i$, the average negative log likelihood (cross-entropy loss) and perplexity are
 \begin{equation}
 \mathcal L(\theta)=-\frac{1}{N}\sum_{i=1}^{N}\log p_\theta(y_i\mid c_i),
 \qquad \mathrm{PPL}=\exp\{\mathcal L(\theta)\}.
 \label{eq:nll}
 \end{equation}
-Natural logarithms give cross-entropy in nats per token; lower loss and perplexity are better. The metric rewards assigning probability to the actual next event, rather than only counting whether the top prediction is correct. It does not give partial credit for a musically nearby wrong pitch or establish perceptual quality.
+Loss uses natural logarithms and is measured in nats/token. Lower loss and perplexity are better. Unlike accuracy, loss rewards assigning more probability to the correct event, even when it is not the top prediction. It gives no special credit for a musically similar wrong pitch and does not measure listening quality.
 
-During training, each validation estimate averages 20 batches of four 1,024-token windows: 81,920 target positions. Seeds reset at each evaluation so models face the same windows. Windows can overlap, so these positions are not necessarily distinct. Dropout and gradient computation are disabled for evaluation.
+Each validation check averages 20 batches of four 1,024-token windows: 81,920 target positions, which may overlap. Resetting evaluation seeds gives all models the same windows. Dropout and gradient calculations are disabled.
 
-The primary checkpoint is \code{best.pt}, the lowest \emph{recorded validation} loss within the budget; \code{ckpt.pt} stores the latest state. Selection never uses test loss. The best checkpoint may precede two hours, while the run still receives the full opportunity to improve. This directly matches ``best within budget,'' rather than requiring the final weights to be optimal. Final losses remain useful diagnostics of overfitting. Full-coverage validation/test evaluation uses a separately specified, matched protocol in Section~\ref{sec:test}.
+A checkpoint is a saved model state. We select \code{best.pt}, the lowest recorded validation loss within the budget; \code{ckpt.pt} is the latest state. Selection uses no test loss. All runs have the full budget to improve, even if their best result occurs earlier. Final losses diagnose later overfitting. Section~\ref{sec:test} describes full-coverage evaluation.

@@ -1,31 +1,15 @@
-\section{Follow-up experiment: stronger dropout}
+\section{Follow-up: can stronger dropout reduce overfitting?}
 \label{sec:dropoutdesign}
-\subsection*{Rationale and mechanism}
-The baseline already includes dropout 0.1 and AdamW weight decay 0.1. The follow-up therefore tests \emph{stronger existing regularization}, not regularization versus none. Dropout disrupts co-adaptation by masking activations during training \citep{srivastava2014dropout}. For drop probability $p$, an inverted-dropout operation is
+\textbf{Why regularization, and which kind?} The rising validation losses motivated this follow-up; stronger dropout was not part of the initial model-size hypothesis. The baseline already uses dropout 0.1 and AdamW weight decay 0.1, so we investigate whether stronger regularization helps.
+
+Two relevant options are weight decay and dropout. Weight decay shrinks weights during optimization, discouraging large weight values. AdamW separates this shrinkage from the adaptive gradient update \citep{loshchilov2019adamw}. Dropout instead randomly removes activations during training, reducing reliance on particular feature combinations \citep{srivastava2014dropout}. For drop probability $p$,
 \begin{equation}
-\widetilde h = \frac{m\odot h}{1-p},\qquad m_j\sim\mathrm{Bernoulli}(1-p).
+\widetilde h=\frac{m\odot h}{1-p},\qquad m_j\sim\mathrm{Bernoulli}(1-p).
 \end{equation}
-Retained values are rescaled during training; dropout is disabled during validation and test inference. In this implementation, the shared probability controls embedding, attention-probability, attention-output, and MLP-output dropout. Changing it therefore modifies several existing sites together, not just one hidden layer.
+Here, $h$ is an activation and $m$ is a random zero/one mask. Remaining values are rescaled to keep their expected size unchanged. Dropout is disabled for evaluation. The shared probability affects embeddings, attention probabilities, attention outputs, and MLP outputs.
 
-Weight decay was a credible alternative: it shrinks parameters through AdamW's decoupled update \citep{loshchilov2019adamw}. But recorded losses do not show that insufficient weight shrinkage is the cause, and no weight-norm diagnostic was collected. Increasing dropout instead tests a complementary source of regularization while preserving optimizer settings. The choice is pragmatic under limited funding, not evidence that dropout must beat stronger weight decay. The value 0.2 is a moderate intervention, not a literature-established MAESTRO optimum.
+We chose to increase dropout from 0.1 to 0.2 while keeping weight decay unchanged. This lets us test one setting within the remaining budget. The readings motivate both options, but do not establish which is best for this dataset. We did not measure weight norms or test stronger weight decay, so we cannot claim that insufficient weight decay caused the problem or that dropout is the better remedy. The value 0.2 is a moderate trial, not a known optimum.
 
-\subsection*{Design: isolate one setting across all sizes}
-All three architectures are retrained from random initialization with dropout increased from 0.1 to 0.2. Small is included even though its baseline plateau is less concerning: it is a useful check on whether an intervention benefits every capacity equally. This adds three two-hour runs, rather than assuming medium's behavior transfers to the others.
+\textbf{Controlled comparison.} All three sizes are retrained from random initialization. Within each size, we keep the architecture, seed 1337, AdamW settings, learning-rate schedule, context 1,024, batch 32, validation windows, evaluation frequency, and 7,200-second budget unchanged. Only dropout and output location change. The launcher checks configurations against the saved baselines. Including small checks whether an intervention motivated by medium and large also helps a model with less obvious overfitting. This adds three two-hour runs, reusing the earlier batch-size benchmark.
 
-\begin{table}[H]
-\centering
-\caption{Controls for the paired dropout comparison within each architecture.}
-\begin{tabularx}{\textwidth}{lX}
-\toprule Factor & Treatment or control\\\midrule
-Dropout & Only training hyperparameter changed: 0.1 $\rightarrow$ 0.2.\\
-Architecture / initialization & Same layers, heads, width, vocabulary, and seed 1337 per size.\\
-Optimizer / schedule & Same AdamW, decay 0.1, LR limits, clipping, and time schedule.\\
-Batching / context & Reuse batch 32, accumulation 1, and context 1,024.\\
-Evaluation / budget & Same fixed windows, frequency, checkpoint rule, and 7,200-second limit.\\\bottomrule
-\end{tabularx}
-\end{table}
-
-Frozen configurations and a dedicated launcher are stored in \code{modified-nanoGPT/experiments/regularization/}. The launcher checks each candidate against its saved baseline and rejects accidental changes beyond dropout and output destination. The prior batching result is reused, avoiding another paid sweep. Outputs remain separate from the baselines; interrupted jobs resume their original budgets.
-
-\subsection*{Predefined improvement criterion}
-The primary question is whether dropout 0.2 achieves a lower \emph{best validation cross-entropy} than dropout 0.1 for the same size. A smaller training--validation gap alone is not sufficient: stronger regularization can worsen both losses through underfitting. Final losses, time of the minimum, and processed tokens provide secondary diagnostics. The same seed controls initialization but does not remove stochasticity or guarantee identical masks and trajectories. This is a one-seed ablation, not a broad hyperparameter search.
+\textbf{Success criterion.} Compare each size with its own baseline using the lowest recorded validation loss. A smaller training--validation gap alone is insufficient if validation loss worsens. Final loss, time of the best checkpoint, and tokens processed are secondary checks. One shared seed controls initialization, but does not make dropout masks or training paths identical. This is a limited follow-up, not an exhaustive hyperparameter search.

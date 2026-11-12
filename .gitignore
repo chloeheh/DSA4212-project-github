@@ -25,3 +25,6 @@ venv/
 *.bbl
 *.blg
 *.synctex.gz
+
+# Local training outputs
+/modified-nanoGPT/out/

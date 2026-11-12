@@ -1,6 +1,6 @@
 \section{Baseline learning curves: dropout 0.1}
 \label{sec:baseline}
-Appendix Figure~\ref{fig:baseline} shows the 13 saved evaluations per architecture: initialization, approximately ten-minute intervals, and completion. Training losses here are also measured with dropout disabled on fixed sampled training windows; they are not noisy losses from a single optimization microbatch. The lower row omits initialization and uses a common scale to expose later changes.
+Appendix Figure~\ref{fig:baseline} shows 13 recorded evaluations for each model: before training, roughly every ten minutes, and at the end. Training loss is measured on fixed training windows with dropout turned off. It is not the loss from a single training microbatch. The lower plots leave out the initial evaluation and use the same scale to make later changes easier to compare. This baseline comparison was used to decide what to investigate next.
 
 \begin{table}[H]
 \centering
@@ -13,6 +13,6 @@ Large & 1.8122 & 50.3 & 1.2865 & 1.9224\\\bottomrule
 \end{tabular}
 \end{table}
 
-All models improve rapidly before the first ten-minute measurement. Small continues improving gradually and largely plateaus late in the run. Medium and large reach their lowest validation losses much earlier; their training losses continue decreasing while validation deteriorates. Large obtains the lowest final training loss but the worst final validation loss. This separates fitting the observed training distribution from predictive performance on held-out pieces.
+All models improve quickly during the first ten minutes. Small then improves more slowly and levels off near the end. Medium and large reach their best validation losses earlier. After that, their training losses keep falling while their validation losses rise. Large has the lowest final training loss but the highest final validation loss. This shows that fitting the training pieces well does not necessarily mean predicting unseen pieces well.
 
-Under the stated checkpoint rule, the baseline ranking is small, medium, then large. The gap is modest: medium and large best-checkpoint perplexities are about 3.7\% and 4.8\% higher than small's. The evidence does not imply that additional parameters are intrinsically harmful; it shows that additional capacity did not win under this implementation, dataset, schedule, and time constraint.
+Using the best recorded validation checkpoint, small ranks first, followed by medium and large. The differences are fairly small: medium and large have best-checkpoint perplexities about 3.7\% and 4.8\% higher than small. This does not mean that more parameters always hurt. It means that larger models did not perform better with this dataset, implementation, schedule, and time limit.

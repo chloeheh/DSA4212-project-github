@@ -1,0 +1,59 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{libertine}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{amsmath,amssymb,graphicx,booktabs,array,tabularx}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{caption,float,enumitem,fancyhdr,microtype,xcolor}
+\usepackage{hyperref}
+\usepackage{xurl}
+\hypersetup{colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black}
+\urlstyle{same}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt plus 1pt minus 1pt}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\captionsetup{font=small,labelfont=bf,skip=5pt}
+\setlist{nosep,leftmargin=*}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small DSA4212: music-event modeling with limited GPU time}
+\fancyhead[R]{\small MAESTRO / nanoGPT}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{14pt}
+\newcommand{\code}[1]{\nolinkurl{#1}}
+\emergencystretch=1em
+% Reporting objective: best validation-selected performance WITHIN two hours per run.
+% Primary evaluation: validation-selected small dropout 0.1, medium/large dropout 0.2.
+% The small entry replaces an earlier all-0.2 evaluation; history is disclosed in the report.
+\graphicspath{{figures/}}
+\begin{document}
+\begin{center}
+{\Large\bfseries Model Size and a Data-Driven Dropout Follow-up\\in Piano Music-Event Transformers\par}
+\vspace{4pt}
+Teo Chloe \quad Student number: A0286502E \quad DSA4212\\
+\textbf{Repository:} \url{https://github.com/chloeheh/DSA4212-project-github}
+\end{center}
+\textbf{Summary.} We compare three randomly initialized GPT models under two hours of A10 training time per run. Small performs best. Rising validation losses in medium and large motivate a follow-up with stronger dropout. This improves those models but does not reverse the ranking. We report the unsuccessful change for small, the assumptions behind final testing, and the limits of these single-seed results.
+\input{sections/01_data}
+\input{sections/02_question_models_metrics}
+\input{sections/03_implementation}
+\input{sections/04_compute_efficiency}
+\input{sections/05_baseline_results}
+\input{sections/06_baseline_analysis}
+\input{sections/07_regularization_design}
+\input{sections/08_regularization_results}
+\input{sections/09_final_evaluation}
+\input{sections/10_conclusions}
+\label{end:main}
+\clearpage
+\begingroup
+\small
+\setlength{\bibsep}{2pt}
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+\endgroup
+\clearpage
+\appendix
+\input{appendix}
+\end{document}

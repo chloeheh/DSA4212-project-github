@@ -1,0 +1,12 @@
+\begin{table}[H]
+\centering
+\caption{Exploratory checks on the same saved test predictions. Equal-piece loss gives every piece the same weight. The last column counts pieces where small has lower loss. These are not repeated training runs.}
+\label{tab:pairedtest}
+\begin{tabular}{lrrr}
+\toprule Model & Token-weighted loss & Equal-piece loss & Small wins / 177\\\midrule
+Small & 1.6935 & 1.7090 & --\\
+Medium & 1.7179 & 1.7335 & 177\\
+Large & 1.7277 & 1.7432 & 177\\
+\bottomrule
+\end{tabular}
+\end{table}
