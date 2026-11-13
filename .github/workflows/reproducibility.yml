@@ -1,0 +1,16 @@
+name: Reproducibility checks
+on: [push, pull_request]
+jobs:
+  saved-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install numpy==2.2.3
+      - run: python scripts/verify_reproducibility.py
+      - run: python -m unittest discover -s modified-nanoGPT/tests -v
+      - run: python scripts/analyze_saved_evaluation.py
+      - name: Check generated tables and diagnostic CSVs
+        run: git diff --exit-code -- report/tables plots

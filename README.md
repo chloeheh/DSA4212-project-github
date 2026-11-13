@@ -2,7 +2,7 @@
 
 Which model size gives the best next-event predictions within two hours on one NVIDIA A10? We train small, medium, and large GPTs from random weights. The baseline's rising validation losses motivate a dropout follow-up. Small remains best in the recorded runs; stronger dropout helps the larger models but does not reverse the ranking.
 
-**[Read the report](report/main.pdf)** · [Reproduce the experiments](docs/reproduction.md) · [Sources and interpretation limits](docs/source_notes.md)
+**[Read the report](report/main.pdf)** · [Reproduce the experiments](docs/reproduction.md)
 
 ## Project flow
 
@@ -24,7 +24,7 @@ maestro-data/ → notebooks/01_tokenization.ipynb → data/maestro/
 | `plots/` | Notebook exports and derived comparison CSVs, grouped by run ID. |
 | `scripts/` | Reproducible analysis of saved evaluation files. |
 | `report/` | Submitted PDF and its complete LaTeX, bibliography, tables, and included figures. |
-| `docs/` | One reproduction guide and a source-to-claim reading map. |
+| `docs/` | Experiment instructions and dataset fingerprints. |
 
 Raw MIDI in `maestro-data/`, generated data in `data/maestro/`, and model checkpoints are excluded from Git. Download/prepare the data or retrieve original checkpoints as described in the reproduction guide. Saved metrics can be analyzed without GPU training.
 
@@ -35,13 +35,18 @@ Use Python 3.11. The remote training image pins PyTorch 2.6.0 and NumPy 2.2.3. F
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install numpy==2.2.3 pandas matplotlib pretty_midi jupyterlab ipykernel modal==1.6.3
+python -m pip install -r requirements.txt
 jupyter lab
 ```
 
-Download the **MAESTRO v3.0.0 MIDI-only archive** from the [official dataset page](https://magenta.tensorflow.org/datasets/maestro). Extract its contents under `maestro-data/`, preserving year folders and `maestro-v3.0.0.csv`/`.json`. Retain the dataset's README and license. Run [01_tokenization.ipynb](notebooks/01_tokenization.ipynb) in order. It preserves the supplied splits and writes token files plus metadata under `data/maestro/`; rerunning export cells overwrites those generated files. All notebooks find the project root from either the root or `notebooks/`.
+Download the **MAESTRO v3.0.0 MIDI-only archive** from the [official dataset page](https://magenta.tensorflow.org/datasets/maestro). Extract its contents directly under `maestro-data/`, preserving year folders, metadata, README, and license. Then run:
 
-Expected piece counts are 962 training, 137 validation, and 177 test; token counts are 33,293,600 / 3,790,187 / 4,334,269. The 376-token vocabulary uses note starts/endings, time shifts, velocity bins, pedal changes, and piece boundaries. It loses some original MIDI detail.
+```bash
+python scripts/prepare_data.py
+python scripts/verify_reproducibility.py --data
+```
+
+Alternatively, run [01_tokenization.ipynb](notebooks/01_tokenization.ipynb). Full data layout and setup details are in the [experiment guide](docs/reproduction.md#1-environment-and-inputs).
 
 ## Reproduce results
 
@@ -58,8 +63,9 @@ This needs only Python's standard library and saved CSVs. It performs no model t
 ## Check and build
 
 ```bash
+python3 scripts/verify_reproducibility.py
 python3 -m unittest discover -s modified-nanoGPT/tests -v
 bash report/build_report.sh
 ```
 
-Tests require NumPy. Building requires Tectonic or latexmk. Submit **report/main.pdf**; all LaTeX sources and included figures are in `report/`. The limit is **ten pages total, including references and appendix**. See the [report guide](report/README.md) for editing and the map from report claims to experimental evidence.
+The verifier checks saved metrics against the main report tables. Tests require NumPy. Building requires Tectonic or latexmk. Submit **report/main.pdf**; all LaTeX sources and included figures are in `report/`. The limit is **ten pages total, including the cover, figures, and references**. Figures are placed within the results sections; this version has no separate appendix. See the [report guide](report/README.md) for editing and the map from report claims to experimental evidence.

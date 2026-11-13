@@ -1,4 +1,3 @@
-"""Full-coverage, piece-aware evaluation of a trusted nanoGPT checkpoint."""
 import argparse
 import csv
 import hashlib
@@ -12,7 +11,6 @@ import numpy as np
 
 
 def piece_windows(pieces, block_size):
-    """Yield (piece index, input start, target count), scoring each next token once."""
     if block_size < 1:
         raise ValueError('block_size must be positive')
     cursor = 0
@@ -52,7 +50,6 @@ def evaluate_checkpoint(checkpoint_path, data_dir, output_dir, device='cuda', ba
     output_dir.mkdir(parents=True, exist_ok=True)
     with (data_dir / 'meta.pkl').open('rb') as f:
         meta = pickle.load(f)
-    # Only load project-generated metadata/checkpoints; these contain trusted pickle data.
     checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
     args = checkpoint['model_args']
     if args['vocab_size'] != meta['vocab_size']:

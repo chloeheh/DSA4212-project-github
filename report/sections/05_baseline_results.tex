@@ -1,6 +1,13 @@
 \section{Baseline learning curves: dropout 0.1}
 \label{sec:baseline}
-Appendix Figure~\ref{fig:baseline} shows 13 recorded evaluations for each model: before training, roughly every ten minutes, and at the end. Training loss is measured on fixed training windows with dropout turned off. It is not the loss from a single training microbatch. The lower plots leave out the initial evaluation and use the same scale to make later changes easier to compare. This baseline comparison was used to decide what to investigate next.
+Figure~\ref{fig:baseline} shows 13 recorded evaluations for each model: before training, roughly every ten minutes, and at the end. Training loss was measured on fixed training windows with dropout turned off, rather than taken from a single training microbatch. The lower plots omit the initial evaluation and use the same scale to make later changes easier to compare. These baseline results guided the choice of the next experiment.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{baseline_curves.pdf}
+\caption{Baseline learning curves. Dashed grey: sampled training loss; solid colors: sampled validation loss. Stars mark best recorded validation checkpoints. The bottom row omits initialization. Lines connect recorded checks; they do not add observations.}
+\label{fig:baseline}
+\end{figure}
 
 \begin{table}[H]
 \centering
@@ -13,6 +20,6 @@ Large & 1.8122 & 50.3 & 1.2865 & 1.9224\\\bottomrule
 \end{tabular}
 \end{table}
 
-All models improve quickly during the first ten minutes. Small then improves more slowly and levels off near the end. Medium and large reach their best validation losses earlier. After that, their training losses keep falling while their validation losses rise. Large has the lowest final training loss but the highest final validation loss. This shows that fitting the training pieces well does not necessarily mean predicting unseen pieces well.
+All models improved quickly during the first ten minutes. Small then improved more slowly and levelled off near the end. Medium and large reached their best validation losses earlier. Their training losses then continued to fall while their validation losses rose. Large had the lowest final training loss but the highest final validation loss. This shows that fitting the training pieces well does not necessarily lead to better predictions on unseen pieces.
 
-Using the best recorded validation checkpoint, small ranks first, followed by medium and large. The differences are fairly small: medium and large have best-checkpoint perplexities about 3.7\% and 4.8\% higher than small. This does not mean that more parameters always hurt. It means that larger models did not perform better with this dataset, implementation, schedule, and time limit.
+Based on the best recorded validation checkpoints, small ranked first, followed by medium and large. The differences were fairly small: medium and large had best-checkpoint perplexities about 3.7\% and 4.8\% higher than small. This does not mean that more parameters always hurt. It means that the larger models did not perform better with this dataset, implementation, schedule, and time limit.

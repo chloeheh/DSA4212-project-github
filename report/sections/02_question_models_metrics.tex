@@ -1,12 +1,12 @@
 \section{Research question, models, and evaluation criteria}
 \label{sec:question}
-\textbf{Objective.} Starting with random weights, train a model to predict the next music event and find the \emph{best performance within a fixed training-time budget per run}. This is a controlled study of model size, rather than an attempt to build a production music generator. The Smol Training Playbook recommends defining the purpose before choosing a model \citep{smolplaybook}; we use this practitioner guide for framing, not as peer-reviewed evidence for performance.
+\textbf{Objective.} The aim was to train models from random weights to predict the next music event and find the \emph{best performance within a fixed training-time budget per run}. The project investigated model size rather than aiming to build a production music generator. The Smol Training Playbook recommends defining the purpose before choosing a model \citep{smolplaybook}. This practitioner guide helped frame the question; it was not treated as peer-reviewed evidence of model performance.
 
-\textbf{Initial hypothesis.} A larger model will achieve lower validation loss because it can learn more complex musical patterns. We test this under the same two-hour GPU-time budget for each size. This is a hypothesis to check, rather than an expected result we must obtain. The initial comparison concerns model size; the follow-up question is developed from the baseline observations in Sections~\ref{sec:baselineanalysis}--\ref{sec:dropoutdesign}.
+\textbf{Initial hypothesis.} Larger models were expected to achieve lower validation loss because they could learn more complex musical patterns. This hypothesis was tested under the same \textbf{two-hour GPU-time budget} for each size. It was an expectation to test, not a result the experiment had to produce. The initial comparison focused on model size. The baseline observations then motivated the follow-up question in Sections~\ref{sec:baselineanalysis}--\ref{sec:dropoutdesign}.
 
 \begin{table}[H]
 \centering
-\caption{Dense decoder-only GPT variants. Counts include learned position embeddings and count tied token/output weights once.}
+\caption{Dense decoder-only GPT variants. Parameter counts include learned position embeddings; shared token and output weights are counted once.}
 \begin{tabular}{lrrrr}
 \toprule Model & Layers & Heads & Width & Total parameters\\\midrule
 Small & 6 & 4 & 256 & 5,080,320\\
@@ -15,7 +15,7 @@ Large & 12 & 12 & 768 & 86,029,056\\\bottomrule
 \end{tabular}
 \end{table}
 
-Each run uses one Modal NVIDIA A10 GPU with 24\,GB memory and BF16 support \citep{nvidiaa10}; models run sequentially. All use vocabulary 376, context 1,024, and effective batch 32. Small/medium/large are project-specific labels, not pretrained GPT-2 variants.
+Each run used one NVIDIA A10 GPU on Modal, with 24\,GB of memory and BF16 support \citep{nvidiaa10}. The models were trained sequentially. All used a vocabulary of 376 tokens, a context length of 1,024 tokens, and an effective batch size of 32 sequences. The labels small, medium, and large refer to this project's configurations, not pretrained GPT-2 variants.
 
 \subsection*{Primary metric and checkpoint selection}
 For target event $y_i$ and its earlier context $c_i$, the average negative log likelihood (cross-entropy loss) and perplexity are
@@ -24,8 +24,8 @@ For target event $y_i$ and its earlier context $c_i$, the average negative log l
 \qquad \mathrm{PPL}=\exp\{\mathcal L(\theta)\}.
 \label{eq:nll}
 \end{equation}
-Loss uses natural logarithms and is measured in nats/token. Lower loss and perplexity are better. Unlike accuracy, loss rewards assigning more probability to the correct event, even when it is not the top prediction. It gives no special credit for a musically similar wrong pitch and does not measure listening quality.
+Loss is calculated using natural logarithms and is measured in nats/token. Lower loss and perplexity indicate better predictions. Unlike accuracy, loss rewards a higher probability for the correct event, even when it is not the top prediction. It gives no special credit for a musically similar but incorrect pitch and does not measure listening quality.
 
-Each validation check averages 20 batches of four 1,024-token windows: 81,920 target positions, which may overlap. Resetting evaluation seeds gives all models the same windows. Dropout and gradient calculations are disabled.
+Each validation check averaged 20 batches of four 1,024-token windows, giving 81,920 target positions, some of which could overlap. Evaluation seeds were reset so that all models were checked on the same windows. Dropout and gradient calculations were disabled during evaluation.
 
-A checkpoint is a saved model state. We select \code{best.pt}, the lowest recorded validation loss within the budget; \code{ckpt.pt} is the latest state. Selection uses no test loss. All runs have the full budget to improve, even if their best result occurs earlier. Final losses diagnose later overfitting. Section~\ref{sec:test} describes full-coverage evaluation.
+A checkpoint is a saved model state. The selected checkpoint, \code{best.pt}, had the lowest recorded validation loss within the budget; \code{ckpt.pt} stored the latest state. Test loss was not used for selection. Every run received the full budget, even if its best result occurred earlier. Final losses were also examined for signs of later overfitting. Section~\ref{sec:test} describes the full-coverage evaluation.

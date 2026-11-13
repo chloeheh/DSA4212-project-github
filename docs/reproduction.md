@@ -4,11 +4,32 @@ Start with the [root guide](../README.md) for environment setup and data prepara
 
 ## 1. Environment and inputs
 
-The training image pins Python 3.11, PyTorch 2.6.0, and NumPy 2.2.3. Install Modal 1.6.3 locally, then authenticate:
+Install the direct dependencies with `python -m pip install -r requirements.txt`.
+These pin direct dependencies rather than a complete historical environment. The training image pins
+Python 3.11, PyTorch 2.6.0, and NumPy 2.2.3. Install Modal 1.6.3 locally, then authenticate:
 
 ```bash
 modal setup
 ```
+
+Download the MIDI-only v3.0.0 archive from the [official MAESTRO page](https://magenta.tensorflow.org/datasets/maestro).
+Its publisher-provided archive SHA-256 is
+`70470ee253295c8d2c71e6d9d4a815189e35c89624b76d22fce5a019d5dde12c`.
+Check the ZIP before extraction (`shasum -a 256 maestro-v3.0.0-midi.zip` on macOS,
+`sha256sum` on Linux). Move the extracted folder's contents into `maestro-data/`,
+so `maestro-data/maestro-v3.0.0.csv` and year subdirectories exist directly there.
+Audio is unnecessary. Then run:
+
+```bash
+python scripts/prepare_data.py
+python scripts/verify_reproducibility.py --data
+```
+
+Preparation executes the existing tokenizer notebook in a fresh kernel and leaves
+the notebook unchanged. `--overwrite` explicitly permits replacing prepared data.
+[The manifest](data_manifest.json) contains fingerprints for the raw MIDI, metadata,
+and prepared token files. If verification fails, check the dataset version and
+tokenizer dependencies before changing the manifest.
 
 The tokenizer produces these files in `data/maestro/`:
 
@@ -114,11 +135,14 @@ Results in Git retain the three completed runs' compact metrics/configuration/ev
 Use [02_baseline_analysis.ipynb](../notebooks/02_baseline_analysis.ipynb), [03_dropout_followup.ipynb](../notebooks/03_dropout_followup.ipynb), and [04_test_evaluation.ipynb](../notebooks/04_test_evaluation.ipynb). Their default run IDs match the saved experiments. They require NumPy, pandas, and Matplotlib, but no GPU. Exports go to `plots/<run-id>/`; `results/` holds the source evidence. Report figures are a deliberately included subset copied to `report/figures/` for standalone compilation.
 
 ```bash
+python3 scripts/verify_reproducibility.py
 python3 scripts/analyze_saved_evaluation.py
 python3 -m unittest discover -s modified-nanoGPT/tests -v
 ```
 
-The first command needs only the standard library. It checks matched identities/counts, reproduces aggregate loss from per-piece rows, calculates equal-piece means and win counts, decomposes loss differences by event share, and regenerates both diagnostic report tables. These are exploratory checks of already inspected test outputs, not new training or independent replications. Tests use synthetic data to check boundaries, alignment, deterministic sampling, target coverage, padding, and invalid inputs; they require NumPy.
+The verifier checks saved metrics against the main report tables. The analysis
+script regenerates the paired-piece and event-family tables from saved CSVs. Both
+use only the standard library; the loader/evaluation tests require NumPy.
 
 For local training, additionally install `torch==2.6.0`, then:
 
@@ -133,3 +157,61 @@ python3 modified-nanoGPT/train.py config/maestro_small.py --device=cpu --dtype=f
 ```
 
 Use a fresh output directory if repeating that check. CPU checks verify execution, not A10 speed or final experimental quality. The implementation uses one GPU per model; no distributed training or pretrained text weights are used.
+
+## 7. Independent training without the owner's Modal Volume
+
+On a Linux machine with an NVIDIA A10 and a CUDA-compatible PyTorch 2.6.0 install,
+prepare/verify data as above and install `requirements-training.txt`. Run from the
+repository root. The following explicitly uses the saved batch-32 selection
+(the baseline config alone defaults to microbatch 4 with accumulation 8):
+
+```bash
+for size in small medium large; do
+  python modified-nanoGPT/train.py "config/maestro_${size}.py" \
+    --batch_size=32 --gradient_accumulation_steps=1 \
+    --out_dir="modified-nanoGPT/out/reproduction/baseline/${size}"
+done
+for size in small medium large; do
+  python modified-nanoGPT/train.py "experiments/regularization/${size}_dropout02.py" \
+    --data_dir=data/maestro \
+    --out_dir="modified-nanoGPT/out/reproduction/dropout02/${size}"
+done
+```
+
+These directories are Git-ignored and must be empty for fresh runs. Preserve them
+if resuming; append `--init_from=resume` to the corresponding original command.
+This bypasses only Modal coordination; the same training loop, frozen settings,
+seed, checkpoint selection, and 7,200-second budgets apply. It does not rerun the
+microbatch benchmark (Section 2); compare recorded throughput with your hardware.
+
+Select the dropout with lower sampled `best_val_loss` in the two summaries **before**
+examining test scores. To evaluate the report's recorded choices on the newly
+trained checkpoints:
+
+```bash
+for size in small medium large; do
+  setting=dropout02
+  if [ "$size" = small ]; then setting=baseline; fi
+  python modified-nanoGPT/evaluate.py \
+    --checkpoint="modified-nanoGPT/out/reproduction/${setting}/${size}/best.pt" \
+    --data-dir=data/maestro \
+    --output-dir="modified-nanoGPT/out/reproduction/evaluation/${size}"
+done
+```
+
+If new validation results prefer different settings, record that as a replication
+outcome and preserve both selections. Do not overwrite the original `results/`.
+Compare new `evaluation.json` values against the saved comparison CSV; numerical
+identity is not expected for time-limited retraining.
+
+To authenticate downloaded original weights instead, put them under
+`<checkpoint-root>/<source-run>/<size>/best.pt`, then run:
+
+```bash
+python scripts/verify_reproducibility.py --checkpoints /path/to/checkpoint-root
+```
+
+The SHA-256 checks use the fingerprints recorded during original inference. They
+read bytes without loading pickle. Only small/baseline and medium/large/dropout02
+are needed for this check. Local inference uses `evaluate.py` as above with these
+paths; it does not require access to Modal once the weights have been retrieved.

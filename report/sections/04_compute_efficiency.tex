@@ -1,13 +1,13 @@
 \section{Training faster within the time budget}
 \label{sec:efficiency}
 \subsection*{Testing batch sizes while keeping 32 sequences per update}
-A microbatch is the set of sequences processed in one forward/backward pass. We benchmark sizes 4, 8, 16, and 32 on the A10, accumulating gradients as needed to keep 32 sequences per optimizer update. Throughput measures target tokens processed per second.
+A microbatch is the set of sequences processed in one forward and backward pass. Microbatch sizes of 4, 8, 16, and 32 were benchmarked on the A10. Gradients were accumulated as needed to keep 32 sequences per optimizer update. Throughput measures the number of target tokens processed per second.
 
-We time complete updates, including loading, transfer, forward/backward passes, clipping, and AdamW. After three warm-up steps, six measured steps give the median update time.
+The benchmark timed complete updates, including data loading, transfer to the GPU, forward and backward passes, gradient clipping, and AdamW updates. After three warm-up steps, six measured steps were used to calculate the median update time.
 
-We choose the highest measured throughput below 85\% GPU memory use. Microbatch 32 wins for all three sizes and is used in training, with BF16 and fused optimization.
+The microbatch with the highest measured throughput below 85\% GPU memory use was selected. Microbatch 32 performed best for all three sizes and was used for training, together with BF16 and fused optimization.
 
-This compares only the tested batch sizes. It does not establish a global optimum and excludes periodic validation/checkpoint overhead.
+The benchmark compared only the tested batch sizes. It did not establish a global optimum or include periodic validation and checkpoint overhead.
 
 \begin{table}[H]
 \centering
@@ -21,12 +21,12 @@ Large & 57,946 & 68,590 & $1.18\times$ & 13.22\\\bottomrule
 \end{table}
 
 \subsection*{What the same time budget means}
-All models use the same learning-rate schedule based on elapsed time. Let $u=t/7{,}200$ be the fraction of the budget used. For the first $w=0.02$ of the budget (about 144 seconds), the learning rate rises towards $\eta_{\max}$. After this warm-up, it follows
+All models followed the same learning-rate schedule based on elapsed time. Let $u=t/7{,}200$ be the fraction of the budget used. During the first $w=0.02$ of the budget (about 144 seconds), the learning rate increased towards $\eta_{\max}$. After warm-up, the schedule was
 \begin{equation}
 \eta(u)=\eta_{\min}+\frac{\eta_{\max}-\eta_{\min}}{2}
 \left[1+\cos\!\left(\pi\frac{u-w}{1-w}\right)\right],\quad u\geq w.
 \end{equation}
-The code keeps the learning rate slightly above zero during warm-up. Models therefore have similar learning rates at the same elapsed time, even though they have completed different numbers of updates. Time spent on validation and checkpoint saving also counts towards the schedule.
+The code keeps the learning rate slightly above zero during warm-up. The models therefore had similar learning rates at the same elapsed time, despite completing different numbers of updates. Time spent on validation and checkpoint saving also counted towards the schedule.
 
 \begin{table}[H]
 \centering
@@ -39,4 +39,4 @@ Large & 15,430 & 0.506 & 15.2\\\bottomrule
 \end{tabular}
 \end{table}
 
-Small processes about 8.3 times as many targets as large. Larger capacity therefore comes with fewer updates and less data exposure. Equal A10 time answers a rental-budget question, but does not isolate model size, equalize FLOPs, or measure equal-token efficiency. Shared learning rate and dropout improve control, without establishing the best settings for every size.
+Small processed about 8.3 times as many targets as large. The larger models therefore had fewer updates and less data exposure within the same time limit. Equal A10 time answers a GPU-rental-budget question, but does not isolate model size, equalize FLOPs, or measure efficiency at an equal token count. Sharing the learning rate and dropout improved experimental control without establishing the best settings for each size.

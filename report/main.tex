@@ -28,13 +28,33 @@
 % The small entry replaces an earlier all-0.2 evaluation; history is disclosed in the report.
 \graphicspath{{figures/}}
 \begin{document}
-\begin{center}
-{\Large\bfseries Model Size and a Data-Driven Dropout Follow-up\\in Piano Music-Event Transformers\par}
-\vspace{4pt}
-Teo Chloe \quad Student number: A0286502E \quad DSA4212\\
-\textbf{Repository:} \url{https://github.com/chloeheh/DSA4212-project-github}
-\end{center}
-\textbf{Summary.} We compare three randomly initialized GPT models under two hours of A10 training time per run. Small performs best. Rising validation losses in medium and large motivate a follow-up with stronger dropout. This improves those models but does not reverse the ranking. We report the unsuccessful change for small, the assumptions behind final testing, and the limits of these single-seed results.
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{1cm}
+\includegraphics[width=0.34\textwidth]{nus_logo.jpg}\par
+\vspace{1.5cm}
+{\Large DSA4212 Project Report\par}
+\vspace{0.7cm}
+{\huge\bfseries Best Performance Within a Fixed Compute Budget}
+\vspace{1cm}
+{\large MAESTRO v3.0.0 \quad$\vert$\quad Random initialization \quad$\vert$\quad NVIDIA A10\par}
+\vspace{1.2cm}
+\begin{tabular}{ll}
+\textbf{Name:} & Teo Chloe\\[0.3cm]
+\textbf{Student ID:} & A0286502E\\[0.3cm]
+\textbf{Email:} & \href{mailto:e1249216@u.nus.edu}{e1249216@u.nus.edu}\\[0.3cm]
+\textbf{Course:} & DSA4212\\[0.3cm]
+\textbf{Date:} & 8 November 2026
+\end{tabular}
+\vfill
+\textbf{Project repository}\\[0.2cm]
+\url{https://github.com/chloeheh/DSA4212-project-github}
+\vspace{0.8cm}
+\end{titlepage}
+\hypersetup{pageanchor=true}
+\setcounter{page}{2}
 \input{sections/01_data}
 \input{sections/02_question_models_metrics}
 \input{sections/03_implementation}
@@ -53,7 +73,4 @@ Teo Chloe \quad Student number: A0286502E \quad DSA4212\\
 \bibliographystyle{unsrtnat}
 \bibliography{references}
 \endgroup
-\clearpage
-\appendix
-\input{appendix}
 \end{document}

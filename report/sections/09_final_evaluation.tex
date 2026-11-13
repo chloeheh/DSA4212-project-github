@@ -1,16 +1,14 @@
-\section{Final evaluation: what transfers to unseen pieces?}
+\section{Final evaluation on unseen pieces}
 \label{sec:test}
-\subsection*{Selection, assumptions, and evaluation history}
-We select the tested dropout value with the lowest sampled validation loss within each size: \textbf{small 0.1, medium 0.2, large 0.2}. Their best checkpoints occur at about 110.1, 60.1, and 60.4 minutes. This compares each size with its selected setting, so the final table does not isolate model size alone. The original equal-dropout baseline remains the direct size comparison.
+\textbf{Selection and history.} The selected settings were dropout 0.1 for small and dropout 0.2 for medium and large. Their checkpoints had the lowest recorded sampled-validation losses and were saved at about 110.1, 60.1, and 60.4 minutes, respectively. This compared selected configurations; the baseline with the same dropout for all sizes remained the cleaner size comparison. Validation-based selection assumes that the supplied split is informative about similar unseen piano pieces \citep[Section~5.3]{goodfellow2016deep}.
 
-Validation-based selection assumes these pieces guide performance on similar unseen piano recordings. The separate test split estimates performance after selection \citep[Section~5.3]{goodfellow2016deep}. However, our evaluation was revised: all three dropout-0.2 checkpoints were tested first, then small was replaced with dropout 0.1, which validation had already preferred before test access. Only small inference was repeated; the archive retains the original result. Its old test loss, 1.6970, also ranked first. This checks that the ranking does not depend on the replacement, but cannot restore an untouched pre-test protocol. We report the revision instead of treating the final comparison as fully independent confirmation.
+The original test evaluation used dropout 0.2 for all sizes. After those results were viewed, the small entry was replaced with dropout 0.1, which had already been preferred by pre-test validation. Only evaluation of the small model was repeated. Its archived test loss was 1.6970, which also ranked first. The replacement did not change the ranking, but the revision means that the final comparison was not fully fixed before test access. These inspected test results must not guide future model choices.
 
-\subsection*{Common scoring and sensitivity to aggregation}
-Dropout and gradients are disabled. Every token after the first in each piece is scored once, including EOS and partial tails: 3,790,050 validation and 4,334,092 test targets. Consecutive blocks contain at most 1,024 targets and reset context; padding is excluded and pieces never share context. Thus early tokens in a block have shorter histories. This is reproducible full coverage, but not full sliding-context likelihood. We rescore validation identically to test rather than comparing test directly with the sampled training-time estimator.
+\textbf{Common scoring.} Every token after the first token of each piece was scored once, including EOS and partial tails: 3,790,050 validation and 4,334,092 test targets. Dropout and gradient calculations were disabled, and padding was excluded. Consecutive blocks contained at most 1,024 targets, reset context, and never crossed pieces. Earlier targets in each block therefore had shorter histories. Validation was rescored using the same procedure as test. These full-coverage losses are not interchangeable with the sampled losses used for checkpoint selection.
 
 \begin{table}[H]
 \centering
-\caption{Validation-selected checkpoints under the same full-coverage scoring rule. Loss is cross-entropy in nats/token.}
+\caption{Selected checkpoints under common full-coverage scoring. Loss is cross-entropy in nats/token.}
 \begin{tabular}{lrrrr}
 \toprule Model & Dropout & Full validation loss & Test loss & Test perplexity\\\midrule
 Small & 0.1 & \textbf{1.7581} & \textbf{1.6935} & \textbf{5.4385}\\
@@ -19,13 +17,19 @@ Large & 0.2 & 1.7926 & 1.7277 & 5.6279\\\bottomrule
 \end{tabular}
 \end{table}
 
-The test loss differences relative to small are 0.0244 and 0.0342 nats/token, or about 2.5\% and 3.5\% higher perplexity. These are modest prediction gaps, despite roughly fivefold and seventeenfold parameter increases. Small also wins after full-coverage validation rescoring, so switching from sampled windows does not reverse the ranking. Test loss is lower for every model than full validation loss. Different pieces may differ in difficulty; this is not evidence that testing improves weights or a reason to tune on test data.
+Medium and large had test perplexities about 2.5\% and 3.5\% higher than small's, respectively, despite having roughly five and seventeen times as many parameters. Small also achieved the lowest full-coverage validation loss, so changing the scoring coverage did not reverse the ranking. Lower test than validation losses may reflect differences in piece difficulty; testing does not improve model weights.
 
-Overall scores weight tokens equally, giving longer pieces more influence. We therefore checked the same saved predictions with each piece weighted equally (Appendix Table~\ref{tab:pairedtest}). The losses are 1.7090, 1.7335, and 1.7432: the ordering is unchanged. More strongly, small has lower loss than both alternatives on each of the 177 matched test pieces. This rules out a ranking caused only by a few long pieces in this evaluation. It does not establish robustness across random seeds or independent datasets: all pieces share the same fitted checkpoints, and model-training variation has not been measured. These checks are exploratory descriptions of inspected test outputs, not additional model-selection evidence.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.70\textwidth]{test_piece_distribution.pdf}
+\caption{Test-loss distributions for the selected settings: small dropout 0.1, medium/large dropout 0.2. Each model is scored on the same 177 pieces. These distributions give each piece equal weight, while the overall loss gives each token equal weight. They do not measure variation across training seeds.}
+\label{fig:pieceevaluation}
+\end{figure}
 
-\subsection*{Which events explain the gap?}
-Appendix Table~\ref{tab:eventdiagnostics} separates the target types. To interpret their importance, each category's mean-loss difference is multiplied by its share of targets. Note starts account for about 0.0172 of medium's 0.0244 total gap and 0.0231 of large's 0.0342 gap: approximately 70\% and 68\%. This localizes most of the disadvantage to predicting note starts, rather than a uniform weakness across events. It motivates investigating pitch-pattern learning, but is not proof of the internal cause.
+\input{tables/paired_test_summary}
+Giving each piece equal weight produced the same ranking, and small had lower loss on all 177 matched pieces (Table~\ref{tab:pairedtest}). A few long pieces therefore did not explain its lead. These exploratory checks used the same fitted checkpoints, so they do not measure variation across training seeds or establish reliability on independent datasets. The distributions in Figure~\ref{fig:pieceevaluation} must not be interpreted as repeated training runs.
 
-Time shifts make up 46.13\% of targets. Both larger models slightly improve on them, and large also improves on pedal events, but these gains do not offset its note-related losses. A single aggregate score can therefore hide useful differences. Conversely, EOS is only 177 targets (0.0041\%) and contributes roughly 0.00084 nats/token to small's total loss despite its mean loss of 20.51. Removing EOS would barely change the average, while generated pieces might still fail to end appropriately. Prediction loss should therefore be paired with termination and listening checks before claiming musical quality.
+\input{tables/event_family_losses}
+Table~\ref{tab:eventdiagnostics} shows differences hidden by the aggregate. After weighting each category's mean-loss difference by its share of targets, note starts accounted for about 0.0172 nats/token of medium's total gap of 0.0244 and 0.0231 nats/token of large's total gap of 0.0342 (71\% and 68\%, respectively). Their slight gains on time shifts, and large's gain on pedal events, did not offset note-related losses. This supports investigating pitch-pattern prediction, but does not establish an internal cause.
 
-The fixed training-window rule may contribute: EOS appears only as the last target of the final valid window, whereas interior tokens can appear in many windows. This is an untested sampling explanation, not established evidence that the architecture cannot learn endings. A deliberate tail-sampling comparison would need explicit weighting to avoid silently changing the objective. Code and saved evidence support reproduction, but checkpoints are excluded from Git; independent inference requires retrieving the original checkpoints or retraining.
+EOS accounted for only 177 targets (0.0041\%). Its high mean loss contributed just 0.00084 nats/token to small's aggregate, so good average prediction coexisted with poor prediction of endings. Fixed training windows may have contributed: EOS can appear only as the last target of the final valid window, unlike interior tokens. This explanation remains untested. Termination checks and listening evaluation would be needed before claiming musical quality; neither was performed here.

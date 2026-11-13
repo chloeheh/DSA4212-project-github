@@ -1,0 +1,13 @@
+# Python 3.11. Direct dependencies; these are not a historical environment lock.
+# NumPy matches the training image. Analysis/tokenization versions pin the
+# environment used for local analysis and tokenization.
+numpy==2.2.3
+pandas==3.0.0
+matplotlib==3.10.8
+pretty_midi==0.2.11.post0
+mido==1.3.3
+nbformat==5.10.4
+nbclient==0.10.4
+ipykernel==7.1.0
+jupyterlab==4.5.2
+modal==1.6.3

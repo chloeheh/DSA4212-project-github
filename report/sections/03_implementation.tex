@@ -1,8 +1,8 @@
 \section{Adapting nanoGPT to MAESTRO}
 \label{sec:implementation}
-nanoGPT provides compact PyTorch model and training code \citep{karpathynanogpt}. It lets us inspect data loading, optimization, and checkpointing and vary model size without changing frameworks. We choose it for clarity and reuse, without claiming it is the fastest implementation.
+nanoGPT was chosen for its compact PyTorch model and training code \citep{karpathynanogpt}. Its clear structure made data loading, optimization, and checkpointing easy to inspect and allowed model size to vary within the same framework. The choice was based on clarity and reuse; no claim is made that it was the fastest implementation.
 
-The decoder learns token and absolute position embeddings. Causal attention uses earlier tokens while masking future targets \citep{vaswani2017attention}. Blocks use pre-layer normalization, residual connections, and GELU feed-forward networks with four times the hidden width. Token embeddings and the output head share weights. All models start from random weights.
+The decoder learns token and absolute position embeddings. Causal attention uses earlier tokens while masking future targets \citep{vaswani2017attention}. Blocks use pre-layer normalization, residual connections, and GELU feed-forward networks with four times the hidden width. Token embeddings and the output head share weights. All models were initialized with random weights.
 
 The loader memory-maps token files and samples uniformly over valid within-piece window starts. A piece with $L>1{,}024$ tokens provides $L-1{,}024$ starts, so longer pieces receive more sampling opportunities. Inputs are $t_0,\ldots,t_{1023}$ and targets are $t_1,\ldots,t_{1024}$. Neither crosses piece boundaries; shorter pieces cannot supply full training windows.
 
@@ -20,6 +20,6 @@ Context & 1,024 tokens & Targets/update & 32,768\\\bottomrule
 \end{tabular}
 \end{table}
 
-AdamW adapts updates using past gradients and separately applies weight decay \citep{loshchilov2019adamw}. Matrix weights receive decay; one-dimensional normalization parameters do not. CUDA uses fused AdamW and, when available, PyTorch scaled dot-product attention. Compilation is disabled and compiler modes were not benchmarked.
+AdamW adapts updates using past gradients and applies weight decay separately \citep{loshchilov2019adamw}. In these runs, matrix weights received decay; one-dimensional normalization parameters did not. Training used fused AdamW on CUDA and PyTorch scaled dot-product attention when available. Compilation was disabled, and compiler modes were not benchmarked.
 
-The 7,200-second loop budget includes validation and checkpoint writes. Setup and final evaluation/saving add overhead, and an ongoing update finishes at the boundary. This is approximately two hours of loop time, not exactly billed time or fixed FLOPs. Atomic checkpoints save weights, optimizer/scaler, random states, token counts, and elapsed budget. Resuming keeps the original budget; Modal Volumes persist outputs after client disconnection. The image pins Python 3.11, PyTorch 2.6.0, and NumPy 2.2.3.
+The 7,200-second loop budget included validation and checkpoint writes. Setup, final evaluation, and saving added overhead, and any update in progress was allowed to finish at the time limit. The budget therefore covered approximately two hours of loop time, rather than an exact billed duration or a fixed number of FLOPs. Atomic checkpoints stored weights, optimizer and precision-scaler states, random states, token counts, and elapsed time. Resuming a run preserved its original budget. Modal Volumes retained outputs after client disconnection. The environment used Python 3.11, PyTorch 2.6.0, and NumPy 2.2.3.

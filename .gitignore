@@ -7,6 +7,7 @@
 __pycache__/
 *.pyc
 .venv/
+.ipynb_checkpoints/
 venv/
 
 # Model checkpoints
@@ -28,3 +29,4 @@ venv/
 
 # Local training outputs
 /modified-nanoGPT/out/
+/out/
