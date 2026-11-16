@@ -19,9 +19,12 @@ def read_rows(path):
 
 def write_rows(path, rows):
     with path.open('w', newline='') as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator='\n')
         writer.writeheader()
-        writer.writerows(rows)
+        # Ignore insignificant float differences across Python versions/platforms.
+        # Keep full precision for calculations and validation; round only exports.
+        writer.writerows({key: f'{value:.12f}' if isinstance(value, float) else value
+                          for key, value in row.items()} for row in rows)
 
 
 def analyze():
